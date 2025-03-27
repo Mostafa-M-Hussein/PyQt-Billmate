@@ -98,7 +98,6 @@ class TextEditWidget(QWidget):
         if not self.table_widget or not self.controller:
             raise Exception("error")
 
-        print(self.width(), self.current_model_object)
         self.setMinimumWidth(100)
         self.setMaximumWidth(600)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -142,7 +141,7 @@ class TextEditWidget(QWidget):
             'amount_settled',
             'loan_amount',
             'paid_amounts',
-            'retrevied_order',
+            'retrieved_order',
             'rem_amounts',
 
         ]
@@ -193,7 +192,6 @@ class TextEditWidget(QWidget):
                                                          start=start_date,
                                                          end=end_date ,
                                                          value=None , operator='between')
-            print("item found --> ", self.rows)
             self.updateTable()
             self.search_btn.setText("Back")
             del self.selected_item
@@ -211,7 +209,6 @@ class TextEditWidget(QWidget):
                 self.createCalendar()
                 self.showCalendar()
                 self.selected_item = selected_item
-                print(self.selected_item)
 
             elif text:
                 splitted_text = text.split("\n")
@@ -223,7 +220,6 @@ class TextEditWidget(QWidget):
                 if selected_item is not None and selected_item in get_columns_name(
                         self.current_model_object
                 ):
-
                     searched_text = splitted_text.copy()
                     for searched_value in splitted_text:
                         searched_value = searched_value.strip(" ")

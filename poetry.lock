@@ -587,6 +587,20 @@ files = [
 ]
 
 [[package]]
+name = "pyqtspinner"
+version = "2.0.0"
+description = "Waiting spinner for PyQt5"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pyqtspinner-2.0.0-py3-none-any.whl", hash = "sha256:04646fe09287d6bd99bdd78ac1633aa2ce6caab70b2bd5e7ee0fc51dd4113220"},
+    {file = "pyqtspinner-2.0.0.tar.gz", hash = "sha256:273d42cf95b11203375c06ee9e6c9e853c0017bb1ada844f494e21e97ca305e4"},
+]
+
+[package.dependencies]
+PyQt5 = ">5.8"
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -854,4 +868,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ab07684a5425f261e8ee536dba17536dab564c3b471cee098a2fa0aa87f3e4cf"
+content-hash = "ee67a8300cac65b686ac820aad2072e236971056fba005937608d5f48f6e57ed"

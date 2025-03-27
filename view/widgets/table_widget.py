@@ -29,15 +29,15 @@ from ..delegates.delegate import (
 )
 
 
+
 class TableWidget(QTableWidget):
-    def __init__(self, rows, columns, controller, parent=None):
+    def __init__(self, columns, controller, parent=None):
         self.hidden_column_index = None
         try:
             super().__init__()
             self.parent = parent
             self.delegates = []
             self.mutex = QMutex()
-            self.rows: List[Optional[List[QTableWidgetItem], Any]] = rows
             self.columns: List[str] = columns
             self.controller = controller
             self._read_only_columns = None
@@ -119,7 +119,7 @@ class TableWidget(QTableWidget):
                     if not value or isinstance(value, str) and len(value) == 0:
                         value = 0
 
-                    elif isinstance(value, str) and value.isnumeric():
+                    elif isinstance(value, str) :
                         value = decimal.Decimal(value)
 
                     if isinstance(self.methods.current_object, CompanyOwner):
@@ -264,7 +264,7 @@ class TableWidget(QTableWidget):
                     self.removeRow(self.sum_row_index)
 
             self.sum_row_index = self.rowCount()
-
+            print("sum row index is --> " ,  self.sum_row_index)
             self.insertRow(self.sum_row_index)
 
             for col in range(self.columnCount()):
@@ -280,30 +280,58 @@ class TableWidget(QTableWidget):
 
         self.blockSignals(False)
 
-    def add_rows(self, rows: List[List[QTableWidgetItem]]):
+    def add_rows(self, rows: List[List[QTableWidgetItem]] = None ):
         self.blockSignals(True)
-        if self.rowCount() > 0:
-            self.setRowCount(0)
-        self.setRowCount(len(rows) if rows else 0)
-        for r in range(self.rowCount()):
 
+        if hasattr(self, 'sum_row_index' ) :
+            self.sum_row_index = None
+
+
+        if rows is None :
+            rows = self.getRowItems
+
+
+
+        print("rows count is-->" , len(rows))
+        # Clear existing rows
+        # if self.rowCount() > 0:
+        #     self.setRowCount(0)
+
+
+
+        # Set row count based on input
+        self.setRowCount(len(rows)  if rows else 0)
+        # Iterate through rows and columns
+        for r in range(self.rowCount()):
             self.last_row = r
+
             for c in range(self.columnCount()):
-                if r < len(rows):
-                    if c < len(rows[r]):
-                        item = rows[r][c]
-                        item.data(Qt.UserRole)
-                    else:
-                        item = QTableWidgetItem()
+                # Ensure we don't go out of bounds
+                if r < len(rows) and c < len(rows[r]):
+                    item = rows[r][c]
                 else:
                     item = QTableWidgetItem()
-                if self.read_only_columns and len(self.read_only_columns) > 0 and c in self.read_only_columns:
+
+                # Handle read-only columns
+                if (self.read_only_columns and
+                        len(self.read_only_columns) > 0 and
+                        c in self.read_only_columns):
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+                # Set alignment
                 item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+                # Set item in table
                 self.setItem(r, c, item)
+
+            # Resize columns
+            for c in range(self.columnCount()):
                 self.resizeColumnToContents(c)
 
+        # Add sum row if needed
+
         self.add_sum_row()
+
         self.blockSignals(False)
 
     @property
@@ -412,7 +440,7 @@ class TableAction:
         else:
             QMessageBox.warning(self.widget, "Error", message)
 
-        # Clean up thread
+
         if self._print_thread:
             self._print_thread.deleteLater()
             self._print_thread = None

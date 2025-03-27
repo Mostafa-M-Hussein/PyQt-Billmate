@@ -1,9 +1,10 @@
 import asyncio
 import subprocess
 import sys
+import threading
 import time
 
-from PyQt5.QtCore import Qt, QTimer, QEventLoop, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, QEventLoop, QThread, pyqtSignal, QThreadPool
 from PyQt5.QtGui import QPixmap , QMovie
 from PyQt5.QtWidgets import QApplication, QSplashScreen, QLabel
 from controllers.home_page_controller import MainWindowController
@@ -14,7 +15,7 @@ from utils.seeder import seed
 from utils.settings_manager import SettingManager
 from PyQt5 import sip
 from resources import  resources_rc
-
+from pyqtspinner import  WaitingSpinner
 import sys
 from PyQt5.QtCore import Qt, QTimer, QObject, QThread, pyqtSignal
 from PyQt5.QtGui import QPixmap, QMovie
@@ -91,7 +92,7 @@ class Main:
 
     def run(self):
         ensure_tables()
-        # seed(20)
+        # seed(200)
         self.app = QApplication(sys.argv)
         self.app.setStyleSheet(load_stylesheet_from_resource())
         self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -100,16 +101,16 @@ class Main:
 
         self.splash_screen = AnimatedSplashScreen(":icons/icons/loading.gif")
         self.splash_screen.start()
-
-
+        # self.app.processEvents(QEventLoop.AllEvents)
 
         main_window = MainWindowController()
 
         QTimer.singleShot(3500 , lambda  : self.on_startup_complete(main_window))
 
 
-
-
+        for t in threading.enumerate() :
+            print(t.is_alive())
+            print(t.name)
 
 
         sys.exit(self.app.exec_())

@@ -12,3 +12,4 @@ class BaseController(ABC):
     def check_fields(self, fields: list) -> bool:
         """Check if all fields are instances of QTableWidgetItem."""
         return all(isinstance(field, QTableWidgetItem) for field in fields)
+

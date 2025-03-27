@@ -11,11 +11,12 @@ from PyQt5.QtWidgets import (
 from models.company_owner import CompanyOwner
 from models.constant import OrderStatus, PaymentStatus
 from utils.helpers import load_stylesheet_from_resource
+from view.base_view import BaseView
 from view.widgets.table_widget import TableWidget, DelegatesType
 from view.widgets.text_edit_widget import TextEditWidget
 
 
-class CompanyOwnerWindow:
+class CompanyOwnerWindow(BaseView):
 
     def __init__(self, widget: QWidget, controller):
         self.table_widget = None
@@ -55,10 +56,10 @@ class CompanyOwnerWindow:
                 "payment_status",
                 "total_profit",
                 "total_discount",
-                "retrieved_order" ,
                 "coupon_code",
                 "payment_method",
                 "total_demand",
+                "retrieved_order",
                 "shipping_company",
                 "salla_total",
                 "cost",
@@ -67,10 +68,20 @@ class CompanyOwnerWindow:
                 "store_name",
             ]
 
-    def get_company_data(self):
-        return CompanyOwner.get_all()
+    def update_table_data(self):
+        return CompanyOwner.get_all(callback=self.update_items)
 
-    def create_table_items(self, rows):
+    def update_items(self, result=None, error=None):
+        print(len(result))
+        if error:
+            raise Exception("Error in Employee get_all function..")
+
+        rows = self.create_table_item_widgets(result)
+        self.table_widget.setRowItems(rows)
+        self.table_widget.add_rows()
+        self.table_widget.update()
+
+    def create_table_item_widgets(self, rows):
         items = []
         for row in rows:
             row: CompanyOwner
@@ -81,33 +92,33 @@ class CompanyOwnerWindow:
             payment_name = str(row.payments.name) if row.payments is not None else ""
             payment_percentage = row.payments.percentage if row.payments is not None else 0
             item: List[QTableWidgetItem] = [
-                self.create_table_item(str(row.id), row.id),
-                self.create_table_item(str(row.payment_date), row.payment_date),
-                self.create_table_item(str(row.order_date), row.order_date),
-                self.create_table_item(
+                self.create_table_item_widget(str(row.id), row.id),
+                self.create_table_item_widget(str(row.payment_date), row.payment_date),
+                self.create_table_item_widget(str(row.order_date), row.order_date),
+                self.create_table_item_widget(
                     PaymentStatus.get_str(row.payment_status), row.payment_status
                 ),
-                self.create_table_item(str(row.total_profit), row.total_profit),
-                self.create_table_item(str(row.total_discount), row.total_discount),
-                self.create_table_item(str(row.retrieved_order), row.retrieved_order),
-                self.create_table_item(coupon_code, coupon_discount),
-                self.create_table_item(payment_name, payment_percentage),
-                self.create_table_item(str(row.total_demand), row.total_demand),
-                self.create_table_item(shipping_name, shipping_percentage),
-                self.create_table_item(str(row.salla_total), row.salla_total),
-                self.create_table_item(str(row.cost), row.cost),
-                self.create_table_item(
+                self.create_table_item_widget(str(row.total_profit), row.total_profit),
+                self.create_table_item_widget(str(row.total_discount), row.total_discount),
+                self.create_table_item_widget(str(row.retrieved_order), row.retrieved_order),
+                self.create_table_item_widget(coupon_code, coupon_discount),
+                self.create_table_item_widget(payment_name, payment_percentage),
+                self.create_table_item_widget(str(row.total_demand), row.total_demand),
+                self.create_table_item_widget(shipping_name, shipping_percentage),
+                self.create_table_item_widget(str(row.salla_total), row.salla_total),
+                self.create_table_item_widget(str(row.cost), row.cost),
+                self.create_table_item_widget(
                     OrderStatus.get_str(row.order_status), row.order_status
                 ),
-                self.create_table_item(str(row.order_number), row.order_number),
-                self.create_table_item(str(row.store_name), row.store_name),
+                self.create_table_item_widget(str(row.order_number), row.order_number),
+                self.create_table_item_widget(str(row.store_name), row.store_name),
             ]
             items.append(item)
         else:
             print("there's no item")
         return items
 
-    def create_table_item(self, for_display, for_edit):
+    def create_table_item_widget(self, for_display, for_edit):
         item = QTableWidgetItem()
         item.setData(Qt.DisplayRole, for_display)
         item.setData(Qt.UserRole, for_edit)
@@ -115,9 +126,7 @@ class CompanyOwnerWindow:
 
     def setup_table_widget(self):
         columns = self.get_column_headers()
-        rows = self.get_company_data()
-        items = self.create_table_items(rows)
-        self.table_widget = TableWidget(items, columns, self.controller , self )
+        self.table_widget = TableWidget(columns= columns, controller=self.controller , parent= self )
         self.table_widget.setReadOnlyColumns([0, 4, 5 , 8 , 9  ])
         self.table_widget.add_delegate(1, DelegatesType.DATE_EDITOR)
         self.table_widget.add_delegate(2, DelegatesType.DATE_EDITOR)
@@ -134,8 +143,8 @@ class CompanyOwnerWindow:
         self.table_widget.add_delegate(13, DelegatesType.COMBOBOXORDER)
         self.table_widget.add_delegate(14, DelegatesType.StringDelegate)
         self.table_widget.add_delegate(15, DelegatesType.StringDelegate)
-        self.table_widget.add_rows(items)
         self.table_widget.itemChanged.connect(self.controller.on_item_changed)
+
         self.hbox: QHBoxLayout = QHBoxLayout()
         self.splitter: QSplitter = QSplitter(Qt.Horizontal)
         self.textEdit = TextEditWidget(self)
@@ -145,3 +154,4 @@ class CompanyOwnerWindow:
         self.splitter.setStretchFactor(1, 1)
         self.hbox.addWidget(self.splitter)
         self.widget.setLayout(self.hbox)
+        self.update_table_data()

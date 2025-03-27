@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, selectinload, joinedload
 from sqlalchemy.sql import func
 
-from models import Base, get_session
+from models import Base, get_session, run_in_thread
 from models.constant import PaymentStatus, OrderStatus
 from utils.logger.logger import setup_logger
 
@@ -358,7 +358,7 @@ class CompanyOwner(Base, DynamicSearch):
     payment_status = Column(
         SqlEnum(PaymentStatus), default=PaymentStatus.PENDING, nullable=True
     )
-    retrieved_order = Column(DECIMAL(10 , 2 ) , nullable = True , default = 0 )
+    retrieved_order = Column(DECIMAL(10, 2), nullable=True, default=0)
     order_date = Column(Date, nullable=True)
     payment_date = Column(Date)
     updated_at = Column(DateTime, onupdate=func.now())
@@ -453,7 +453,7 @@ class CompanyOwner(Base, DynamicSearch):
                     payment_status=PaymentStatus.get_status(payment_status),
                     order_date=order_date,
                     payment_date=payment_date,
-                    retrieved_order= retrieved_order ,
+                    retrieved_order=retrieved_order,
                     coupons_id=coupon_id,
                     shipping_id=shipping_id,
                     cost=cost,
@@ -593,27 +593,26 @@ class CompanyOwner(Base, DynamicSearch):
             finally:
                 session.close()
 
+    @run_in_thread
     @staticmethod
-    def get_all():
-        with get_session() as session:
+    def get_all(session):
 
-            try:
-                # Create the query with joinedload for the coupons relationship
-                stmt = (
-                    select(CompanyOwner)
-                    .options(selectinload(CompanyOwner.coupons), selectinload(CompanyOwner.shippings),
-                             selectinload(CompanyOwner.payments))  # Eager load coupons
-                    .order_by(CompanyOwner.created_at)  # Order by creation date
-                )
-                # Execute the query and fetch all results
-                result = session.execute(stmt)
-                owners = result.scalars().all()  # Use .unique() to avoid duplicates
-                return owners
-            except Exception as e:
-                logger.error(e, exc_info=True)  # Log the error
-                return []
-            finally:
-                session.close()
+        try:
+            # Create the query with joinedload for the coupons relationship
+            stmt = (
+                select(CompanyOwner)
+                .options(selectinload(CompanyOwner.coupons), selectinload(CompanyOwner.shippings),
+                         selectinload(CompanyOwner.payments))  # Eager load coupons
+                .order_by(CompanyOwner.created_at)  # Order by creation date
+            )
+            # Execute the query and fetch all results
+            result = session.execute(stmt)
+            owners = result.scalars().all()  # Use .unique() to avoid duplicates
+            return owners
+        except Exception as e:
+            logger.error(e, exc_info=True)  # Log the error
+            return []
+
 
     @staticmethod
     def remove(id: str):
@@ -631,12 +630,12 @@ class CompanyOwner(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-    def search(self, column, value):
+    def search(self, column, value, operator="eq", **kwargs):
         with get_session() as session:
-            return self.where(column, value, session)
-
-
-
+            result = self.where(column, value, session, operator=operator, **kwargs)
+            if len(result) == 0:
+                result = self.where(column, value, session, operator=operator, **kwargs)
+            return result
 
 
 class Company(Base, DynamicSearch):
@@ -671,13 +670,12 @@ class Company(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-
     @staticmethod
     def add(
             loan_amount: decimal.Decimal,
             date_of_debt: datetime.date,
             paid_amounts: decimal.Decimal,
-            rem_amounts : decimal.Decimal ,
+            rem_amounts: decimal.Decimal,
             note: str,
             monthly_payment_due_date: datetime.date,
             shipping_name: str = None,
@@ -707,7 +705,7 @@ class Company(Base, DynamicSearch):
                     loan_amount=loan_amount,
                     date_of_debt=date_of_debt,
                     paid_amounts=paid_amounts,
-                    rem_amounts=rem_amounts ,
+                    rem_amounts=rem_amounts,
                     note=note,
                     monthly_payment_due_date=monthly_payment_due_date,
                     shipping_id=shipping_id,
@@ -775,18 +773,18 @@ class Company(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
+    @run_in_thread
     @staticmethod
-    def get_all():
-        with get_session() as session:
-            try:
-                stmt = select(Company).order_by(Company.created_at).options(selectinload(Company.shippings))
-                result = session.execute(stmt)
-                companys = result.scalars().all()
-                for company in companys:
-                    session.refresh(company)
-                return companys
-            except Exception as e:
-                logger.error(e, exc_info=True)
+    def get_all(session):
+        try:
+            stmt = select(Company).order_by(Company.created_at).options(selectinload(Company.shippings))
+            result = session.execute(stmt)
+            companys = result.scalars().all()
+            for company in companys:
+                session.refresh(company)
+            return companys
+        except Exception as e:
+            logger.error(e, exc_info=True)
 
     @staticmethod
     def remove(id: str):
@@ -801,8 +799,9 @@ class Company(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-    def search(self, column, value):
+    def search(self, column, value, operator="eq", **kwargs):
         with get_session() as session:
-            return self.where(column, value, session)
-
-
+            result = self.where(column, value, session, operator=operator, **kwargs)
+            if len(result) == 0:
+                result = self.where(column, value, session, operator=operator, **kwargs)
+            return result

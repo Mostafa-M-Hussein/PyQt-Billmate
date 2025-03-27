@@ -43,7 +43,6 @@ class Employee(Base, DynamicSearch):
         Index('idx_employee_created_at', 'created_at'),
     )
 
-
     @staticmethod
     @run_in_thread
     def get(id: str):
@@ -130,18 +129,18 @@ class Employee(Base, DynamicSearch):
             finally:
                 session.close()
 
+    @run_in_thread
     @staticmethod
-    def get_all():
-        with get_session() as session:
-            try:
-                stmt = select(Employee).order_by(Employee.created_at)
-                result = session.execute(stmt)
-                employees = result.scalars().all()
-                for employee in employees:
-                    session.refresh(employee)
-                return employees
-            except Exception as e:
-                logger.error(e, exc_info=True)
+    def get_all(session):
+        try:
+            stmt = select(Employee).order_by(Employee.created_at)
+            result = session.execute(stmt)
+            employees = result.scalars().all()
+            for employee in employees:
+                session.refresh(employee)
+            return employees
+        except Exception as e:
+            logger.error(e, exc_info=True)
 
     @staticmethod
     def get_column(column_name):
@@ -167,11 +166,11 @@ class Employee(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-    def search(self, column, value , operator = "eq"  , **kwargs ):
+    def search(self, column, value, operator="eq", **kwargs):
         with get_session() as session:
-            result = self.where(column, value, session , operator=operator , **kwargs)
+            result = self.where(column, value, session, operator=operator, **kwargs)
             if len(result) == 0:
-                result = self.where(column, value, session, operator=operator , **kwargs )
+                result = self.where(column, value, session, operator=operator, **kwargs)
             return result
 
 # Employee.search("name" , "")

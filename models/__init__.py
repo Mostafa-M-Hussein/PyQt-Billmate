@@ -1,11 +1,13 @@
 import functools
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 
-from sqlalchemy import inspect , create_engine
+from sqlalchemy import inspect , create_engine , text
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base  , sessionmaker
 
+from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, QObject
 
 from utils.logger.logger import setup_logger
 
@@ -30,7 +32,41 @@ Base = declarative_base()
 Session = sessionmaker(bind=engine,  expire_on_commit=False)
 logger = setup_logger("db", "logs/db.log")
 db_executor = ThreadPoolExecutor(max_workers=5)
+#
+# with engine.connect() as connection:
+#     # Disable foreign key checks to allow dropping
+#     connection.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+#
+#     # Drop the database
+#     connection.execute(text("DROP DATABASE IF EXISTS app_db"))
+#
+#     # Recreate the database
+#     connection.execute(text("CREATE DATABASE app_db"))
+#
+#     # Re-enable foreign key checks
+#     connection.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+#     print("done")
 
+
+# def drop_and_create_database(engine):
+#     try:
+#         with engine.connect() as conn:
+#             # Switch to system database to drop and create
+#             conn.execute(text("USE mysql"))
+#
+#             # Drop database if exists
+#             conn.execute(text("DROP DATABASE IF EXISTS app_db"))
+#
+#             # Create new database
+#             conn.execute(text("CREATE DATABASE app_db"))
+#
+#             print("Database dropped and recreated successfully")
+#     except Exception as e:
+#         print(f"Error occurred: {e}")
+#
+#
+# # Execute the function
+# drop_and_create_database(engine)
 
 @contextmanager
 def get_session() :
@@ -45,41 +81,104 @@ def get_session() :
             session.close()
 
 
+class DatabaseSignals(QObject):
+    """
+    Signals class to handle database operation results
+    """
+    finished = pyqtSignal(object)  # Result signal
+    error = pyqtSignal(Exception)  # Error signal
+
+
+class DatabaseRunnable(QRunnable):
+    """
+    Runnable class to handle database operations in a thread pool
+    """
+
+    def __init__(self, func, session_factory, *args, **kwargs):
+        """
+        Initialize the runnable with function and arguments
+
+        :param func: Database function to execute
+        :param session_factory: Database session factory
+        :param args: Positional arguments for the function
+        :param kwargs: Keyword arguments for the function
+        """
+        super().__init__()
+
+        self.func = func
+        self.session_factory = session_factory
+        self.args = args
+        self.kwargs = kwargs
+
+        # Signals for communication
+        self.signals = DatabaseSignals()
+
+        # Extract callback if provided
+        self.callback = self.kwargs.pop('callback', None)
+
+    def run(self):
+        """
+        Execute the database operation
+        """
+        try:
+            # Create a new session
+            with self.session_factory() as session:
+                # Execute the function with the session
+                result = self.func(session, *self.args, **self.kwargs)
+
+                # Emit the result via signals
+                self.signals.finished.emit(result)
+
+                # Call callback if provided
+                if self.callback and callable(self.callback):
+                    self.callback(result=result, error=None)
+
+        except Exception as e:
+            # Capture full traceback for debugging
+            error_traceback = traceback.format_exc()
+
+            # Create exception with full traceback
+            full_error = Exception(f"{str(e)}\n{error_traceback}")
+
+            # Emit the error via signals
+            self.signals.error.emit(full_error)
+
+            # Call callback with error if provided
+            if self.callback and callable(self.callback):
+                self.callback(result=None, error=full_error)
+
+
 def run_in_thread(func):
     """
-    Decorator to run database operations in a separate thread.
-    This prevents UI freezing during database operations.
+    Decorator to run database operations in a QThreadPool
+
+    :param func: Database function to be executed in a thread pool
+    :return: Wrapped function that runs in a thread pool
     """
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Get the callback if provided
-        callback = kwargs.pop('callback', None)
-        # Function to execute in thread
-        def thread_task():
-            try:
+        # Get global or create a new thread pool
+        thread_pool = getattr(wrapper, 'thread_pool', QThreadPool.globalInstance())
 
-                with get_session() as session:
+        # Create the runnable
+        runnable = DatabaseRunnable(
+            func,
+            get_session,  # Assumes get_session is defined elsewhere
+            *args,
+            **kwargs
+        )
 
-                    result = func(session, *args, **kwargs)
+        # Start the runnable in the thread pool
+        thread_pool.start(runnable)
 
+        # Return the signals for advanced control if needed
+        return runnable.signals
 
-                if callback and callable(callback):
-                    callback(result=result, error=None)
-
-                return result
-            except Exception as e:
-                # Handle exceptions
-                if callback and callable(callback):
-                    callback(result=None, error=e)
-                    raise e
-                else:
-                    # Re-raise if no callback
-                    raise
-
-        # Submit the task to the thread pool
-        future = db_executor.submit(thread_task)
-        return future
+    # Attach a thread pool to the wrapper if needed
+    wrapper.thread_pool = QThreadPool()
+    # Optional: Set max thread count (default is typically CPU core count)
+    wrapper.thread_pool.setMaxThreadCount(10)
 
     return wrapper
 

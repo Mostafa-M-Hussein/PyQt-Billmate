@@ -4,7 +4,7 @@ import decimal
 from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select
 from sqlalchemy.sql import func
 
-from models import Base, get_session
+from models import Base, get_session, run_in_thread
 from models.alchemy import DynamicSearch
 from utils.logger.logger import setup_logger
 
@@ -30,18 +30,17 @@ class FreeLancer(Base, DynamicSearch):
                 result = session.execute(stmt)
                 freelancer = result.scalars().first()
                 session.refresh(freelancer)
-                return  freelancer
+                return freelancer
             except Exception as e:
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-
     @staticmethod
     def add(
-        note: str,
-        amount: decimal.Decimal,
-        other_costs: str,
-        date: datetime.date = None,
+            note: str,
+            amount: decimal.Decimal,
+            other_costs: str,
+            date: datetime.date = None,
     ):
         with get_session() as session:
             try:
@@ -56,7 +55,6 @@ class FreeLancer(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
                 return False
-
 
     @staticmethod
     def update(updated_employee: dict):
@@ -88,19 +86,18 @@ class FreeLancer(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-
+    @run_in_thread
     @staticmethod
-    def get_all():
-        with get_session() as session:
-            try:
-                stmt = select(FreeLancer).order_by(FreeLancer.created_at)
-                result = session.execute(stmt)
-                freelancers = result.scalars().all()
-                for freelancer in freelancers :
-                    session.refresh(freelancer)
-                return freelancers
-            except Exception as e:
-                logger.error(e, exc_info=True)
+    def get_all(session):
+        try:
+            stmt = select(FreeLancer).order_by(FreeLancer.created_at)
+            result = session.execute(stmt)
+            freelancers = result.scalars().all()
+            for freelancer in freelancers:
+                session.refresh(freelancer)
+            return freelancers
+        except Exception as e:
+            logger.error(e, exc_info=True)
 
     @staticmethod
     def remove(id: str):
@@ -117,7 +114,9 @@ class FreeLancer(Base, DynamicSearch):
                 session.rollback()
                 logger.error(e, exc_info=True)
 
-    def search(self, column, value):
+    def search(self, column, value, operator="eq", **kwargs):
         with get_session() as session:
-
-            return self.where(column, value, session)
+            result = self.where(column, value, session, operator=operator, **kwargs)
+            if len(result) == 0:
+                result = self.where(column, value, session, operator=operator, **kwargs)
+            return result

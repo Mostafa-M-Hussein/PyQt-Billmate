@@ -4,6 +4,7 @@ import os.path
 from logging.handlers import RotatingFileHandler
 from pythonjsonlogger.jsonlogger import JsonFormatter
 
+from functools import lru_cache
 
 def setup_logger(
     name: str, log_file: str, level: int = logging.DEBUG
@@ -12,9 +13,9 @@ def setup_logger(
     logger.setLevel(level)
     logger.propagate = False
     if not logger.handlers:
-        log_dir = os.path.dirname(log_file)
-        if log_dir and not os.path.exists(log_file):
-            os.makedirs(log_dir, exist_ok=True)
+        # log_dir = os.path.dirname(log_file)
+        # if log_dir and not os.path.exists(log_file):
+        #     os.makedirs(log_dir, exist_ok=True)
         file_formatter = JsonFormatter(
             fmt="%(name)s %(lineno)d  %(levelname)s %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",

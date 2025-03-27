@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QDateEdit,
     QStyleOptionViewItem,
-    QWidget, QLineEdit, QMessageBox, QComboBox, )
+    QWidget, QLineEdit, QMessageBox, QComboBox, QTableView, QApplication, )
 
 from models.company_owner import Coupon, ShippingCompany, Payment
 from models.constant import OrderStatus
@@ -205,24 +205,63 @@ class ComboBoxEditorPayment(QStyledItemDelegate):
         return editor
 
     def editorEvent(self, event, model, option, index):
-        """Ensures the dropdown opens at the exact position of the cell and closes properly."""
-        if event.type() == event.MouseButtonPress and  event.button() == Qt.LeftButton :
-            # Get the table widget
-            table = option.widget
+        """
+        Robust method to handle ComboBox editor events with improved error handling
 
-            # Start editing through the proper Qt mechanism
-            table.edit(index)
+        Args:
+            event: Qt event
+            model: Data model
+            option: Style option
+            index: Model index
 
-            # Get the created editor
-            editor = table.indexWidget(index)
-            if not editor:
-                editor = table.viewport().findChild(QComboBox)
+        Returns:
+            bool: Whether event was handled
+        """
+        try:
+            # Check if it's a left mouse button press
+            if (event.type() == event.MouseButtonPress and
+                    event.button() == Qt.LeftButton):
 
-            if isinstance(editor, QComboBox):
-                QTimer.singleShot(0, editor.showPopup)
+                # Get the table widget
+                table = option.widget
 
-            return True
-        return super().editorEvent(event, model, option, index)
+                # Ensure the table is valid
+                if not isinstance(table, QTableView):
+                    return super().editorEvent(event, model, option, index)
+
+                # Start editing
+                table.edit(index)
+
+                # Use QApplication to find the focused widget
+                app = QApplication
+                focused_widget = app.focusWidget()
+
+                # Verify it's a QComboBox
+                if isinstance(focused_widget, QComboBox):
+                    # Store reference to active editor
+                    self._active_editor = focused_widget
+
+                    # Safely show popup with a small delay
+                    QTimer.singleShot(0, self._show_popup)
+
+                return True
+
+            return super().editorEvent(event, model, option, index)
+
+        except RuntimeError:
+            # Handle potential deleted object scenarios
+            print("Editor event encountered a runtime error")
+            return False
+
+    def _show_popup(self):
+        """
+        Safely show ComboBox popup
+        """
+        try:
+            if self._active_editor and isinstance(self._active_editor, QComboBox):
+                self._active_editor.showPopup()
+        except Exception as e:
+            print(f"Error showing popup: {e}")
 
     def setEditorData(self, editor, index):
         value = index.data(Qt.DisplayRole)
@@ -280,27 +319,65 @@ class ComboBoxEditorOrder(QStyledItemDelegate):
         if value:
             editor.setCurrentText(value)
         return editor
+
     def editorEvent(self, event, model, option, index):
-        """Ensures the dropdown opens at the exact position of the cell and closes properly."""
-        if event.type() == event.MouseButtonPress and event.button() == Qt.LeftButton :
-            # Get the table widget
-            table = option.widget
+        """
+        Robust method to handle ComboBox editor events with improved error handling
 
-            # Start editing through the proper Qt mechanism
-            table.edit(index)
+        Args:
+            event: Qt event
+            model: Data model
+            option: Style option
+            index: Model index
 
-            # Get the created editor
-            editor = table.indexWidget(index)
-            if not editor:
-                # If the editor wasn't created as an index widget, try to get it another way
-                editor = table.viewport().findChild(QComboBox)
+        Returns:
+            bool: Whether event was handled
+        """
+        try:
+            # Check if it's a left mouse button press
+            if (event.type() == event.MouseButtonPress and
+                    event.button() == Qt.LeftButton):
 
-            if isinstance(editor, QComboBox):
-                # Show the popup on the properly positioned editor
-                QTimer.singleShot(0, editor.showPopup)
+                # Get the table widget
+                table = option.widget
 
-            return True
-        return super().editorEvent(event, model, option, index)
+                # Ensure the table is valid
+                if not isinstance(table, QTableView):
+                    return super().editorEvent(event, model, option, index)
+
+                # Start editing
+                table.edit(index)
+
+                # Use QApplication to find the focused widget
+                app = QApplication
+                focused_widget = app.focusWidget()
+
+                # Verify it's a QComboBox
+                if isinstance(focused_widget, QComboBox):
+                    # Store reference to active editor
+                    self._active_editor = focused_widget
+
+                    # Safely show popup with a small delay
+                    QTimer.singleShot(0, self._show_popup)
+
+                return True
+
+            return super().editorEvent(event, model, option, index)
+
+        except RuntimeError:
+            # Handle potential deleted object scenarios
+            print("Editor event encountered a runtime error")
+            return False
+
+    def _show_popup(self):
+        """
+        Safely show ComboBox popup
+        """
+        try:
+            if self._active_editor and isinstance(self._active_editor, QComboBox):
+                self._active_editor.showPopup()
+        except Exception as e:
+            print(f"Error showing popup: {e}")
 
 
     def setEditorData(self, editor, index):
@@ -393,28 +470,66 @@ class ComboBoxWithAddDelegate(QStyledItemDelegate):
                 editor.setCurrentText(current_text)
         return editor
 
+
+
     def editorEvent(self, event, model, option, index):
-        """Ensures the dropdown opens at the exact position of the cell and closes properly."""
-        if event.type() == event.MouseButtonPress and event.button() == Qt.LeftButton  :
-            print("clicked")
-            # Get the table widget
-            table = option.widget
+        """
+        Robust method to handle ComboBox editor events with improved error handling
 
-            # Start editing through the proper Qt mechanism
-            table.edit(index)
+        Args:
+            event: Qt event
+            model: Data model
+            option: Style option
+            index: Model index
 
-            # Get the created editor
-            editor = table.indexWidget(index)
-            if not editor:
-                # If the editor wasn't created as an index widget, try to get it another way
-                editor = table.viewport().findChild(QComboBox)
+        Returns:
+            bool: Whether event was handled
+        """
+        try:
+            # Check if it's a left mouse button press
+            if (event.type() == event.MouseButtonPress and
+                    event.button() == Qt.LeftButton):
 
-            if isinstance(editor, QComboBox):
-                # Show the popup on the properly positioned editor
-                QTimer.singleShot(0, editor.showPopup)
+                # Get the table widget
+                table = option.widget
 
-            return True
-        return super().editorEvent(event, model, option, index)
+                # Ensure the table is valid
+                if not isinstance(table, QTableView):
+                    return super().editorEvent(event, model, option, index)
+
+                # Start editing
+                table.edit(index)
+
+                # Use QApplication to find the focused widget
+                app = QApplication
+                focused_widget = app.focusWidget()
+
+                # Verify it's a QComboBox
+                if isinstance(focused_widget, QComboBox):
+                    # Store reference to active editor
+                    self._active_editor = focused_widget
+
+                    # Safely show popup with a small delay
+                    QTimer.singleShot(0, self._show_popup)
+
+                return True
+
+            return super().editorEvent(event, model, option, index)
+
+        except RuntimeError:
+            # Handle potential deleted object scenarios
+            print("Editor event encountered a runtime error")
+            return False
+
+    def _show_popup(self):
+        """
+        Safely show ComboBox popup
+        """
+        try:
+            if self._active_editor and isinstance(self._active_editor, QComboBox):
+                self._active_editor.showPopup()
+        except Exception as e:
+            print(f"Error showing popup: {e}")
 
     def setEditorData(self, editor: typing.Optional[QWidget], index: QtCore.QModelIndex) -> None:
         display_value = index.data(Qt.DisplayRole)
