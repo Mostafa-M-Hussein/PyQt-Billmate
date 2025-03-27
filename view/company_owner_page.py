@@ -1,0 +1,147 @@
+from typing import List
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QWidget,
+    QTableWidgetItem,
+    QHBoxLayout,
+    QSplitter,
+)
+
+from models.company_owner import CompanyOwner
+from models.constant import OrderStatus, PaymentStatus
+from utils.helpers import load_stylesheet_from_resource
+from view.widgets.table_widget import TableWidget, DelegatesType
+from view.widgets.text_edit_widget import TextEditWidget
+
+
+class CompanyOwnerWindow:
+
+    def __init__(self, widget: QWidget, controller):
+        self.table_widget = None
+        self.widget = widget
+        self.controller = controller
+        self.initUi()
+
+
+    def initUi(self):
+        self.setup_table_widget()
+
+    def get_column_headers(self, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            return [
+                "id",
+                "تاريخ السداد",
+                "تاريخ الطلب",
+                "حالة السداد",
+                "اجمالي الربح من الطلب",
+                "اجمالي الخصم",
+                "كوبون الخصم",
+                "وسيلة الدفع",
+                "اجمالي الطلب",
+                "المسترجع" ,
+                "شركة الشحن",
+                "مجموع السلة",
+                "تكلفة",
+                "حالة الطلب",
+                "رقم الطلب",
+                "اسم المتجر",
+
+            ]
+        else:
+            return [
+                "payment_date",
+                "order_date",
+                "payment_status",
+                "total_profit",
+                "total_discount",
+                "retrieved_order" ,
+                "coupon_code",
+                "payment_method",
+                "total_demand",
+                "shipping_company",
+                "salla_total",
+                "cost",
+                "order_status",
+                "order_number",
+                "store_name",
+            ]
+
+    def get_company_data(self):
+        return CompanyOwner.get_all()
+
+    def create_table_items(self, rows):
+        items = []
+        for row in rows:
+            row: CompanyOwner
+            coupon_code = str(row.coupons.code) if row.coupons is not None else ""
+            coupon_discount = row.coupons.discount if row.coupons is not None else 0
+            shipping_name = str(row.shippings.name) if row.shippings is not None else ""
+            shipping_percentage = row.shippings.percentage if row.shippings is not None else 0
+            payment_name = str(row.payments.name) if row.payments is not None else ""
+            payment_percentage = row.payments.percentage if row.payments is not None else 0
+            item: List[QTableWidgetItem] = [
+                self.create_table_item(str(row.id), row.id),
+                self.create_table_item(str(row.payment_date), row.payment_date),
+                self.create_table_item(str(row.order_date), row.order_date),
+                self.create_table_item(
+                    PaymentStatus.get_str(row.payment_status), row.payment_status
+                ),
+                self.create_table_item(str(row.total_profit), row.total_profit),
+                self.create_table_item(str(row.total_discount), row.total_discount),
+                self.create_table_item(str(row.retrieved_order), row.retrieved_order),
+                self.create_table_item(coupon_code, coupon_discount),
+                self.create_table_item(payment_name, payment_percentage),
+                self.create_table_item(str(row.total_demand), row.total_demand),
+                self.create_table_item(shipping_name, shipping_percentage),
+                self.create_table_item(str(row.salla_total), row.salla_total),
+                self.create_table_item(str(row.cost), row.cost),
+                self.create_table_item(
+                    OrderStatus.get_str(row.order_status), row.order_status
+                ),
+                self.create_table_item(str(row.order_number), row.order_number),
+                self.create_table_item(str(row.store_name), row.store_name),
+            ]
+            items.append(item)
+        else:
+            print("there's no item")
+        return items
+
+    def create_table_item(self, for_display, for_edit):
+        item = QTableWidgetItem()
+        item.setData(Qt.DisplayRole, for_display)
+        item.setData(Qt.UserRole, for_edit)
+        return item
+
+    def setup_table_widget(self):
+        columns = self.get_column_headers()
+        rows = self.get_company_data()
+        items = self.create_table_items(rows)
+        self.table_widget = TableWidget(items, columns, self.controller , self )
+        self.table_widget.setReadOnlyColumns([0, 4, 5 , 8 , 9  ])
+        self.table_widget.add_delegate(1, DelegatesType.DATE_EDITOR)
+        self.table_widget.add_delegate(2, DelegatesType.DATE_EDITOR)
+        self.table_widget.add_delegate(3, DelegatesType.COMBOBOXPAYMENT)
+        self.table_widget.add_delegate(4, DelegatesType.NumericalDelegate)
+        self.table_widget.add_delegate(5, DelegatesType.NumericalDelegate)
+        self.table_widget.add_delegate(6, DelegatesType.COMBOBOXWITHADD)
+        self.table_widget.add_delegate(7, DelegatesType.COMBOBOXWITHADD)
+        self.table_widget.add_delegate(8, DelegatesType.NumericalDelegate)
+        self.table_widget.add_delegate(9, DelegatesType.NumericalDelegate)
+        self.table_widget.add_delegate(10, DelegatesType.COMBOBOXWITHADD)
+        self.table_widget.add_delegate(11, DelegatesType.NumericalDelegate)
+        self.table_widget.add_delegate(12, DelegatesType.NumericalDelegate)
+        self.table_widget.add_delegate(13, DelegatesType.COMBOBOXORDER)
+        self.table_widget.add_delegate(14, DelegatesType.StringDelegate)
+        self.table_widget.add_delegate(15, DelegatesType.StringDelegate)
+        self.table_widget.add_rows(items)
+        self.table_widget.itemChanged.connect(self.controller.on_item_changed)
+        self.hbox: QHBoxLayout = QHBoxLayout()
+        self.splitter: QSplitter = QSplitter(Qt.Horizontal)
+        self.textEdit = TextEditWidget(self)
+        self.splitter.addWidget(self.textEdit)
+        self.splitter.addWidget(self.table_widget)
+        self.splitter.setSizes([300, 300])
+        self.splitter.setStretchFactor(1, 1)
+        self.hbox.addWidget(self.splitter)
+        self.widget.setLayout(self.hbox)
