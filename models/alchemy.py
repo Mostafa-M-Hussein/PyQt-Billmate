@@ -3,7 +3,7 @@ import decimal
 from typing import List, Any, Optional
 from sqlalchemy import or_, and_, desc , select
 from sqlalchemy.orm import selectinload
-from models import get_session
+from models import get_session, run_in_thread
 
 
 def get_columns_name(model: object):

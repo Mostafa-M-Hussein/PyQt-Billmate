@@ -7,9 +7,14 @@ from sqlalchemy import inspect , create_engine , text
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base  , sessionmaker
 
-from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, QObject
+from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, QObject, QEventLoop, QTimer
 
 from utils.logger.logger import setup_logger
+
+
+
+
+
 
 db_url = "sqlite:///database.db"
 # db_url = f"mysql+pymysql://moado:P%40$$wOrd25@203.161.56.185:3306/app_db"
@@ -109,6 +114,7 @@ class DatabaseRunnable(QRunnable):
         self.session_factory = session_factory
         self.args = args
         self.kwargs = kwargs
+        self.result  = None
 
         # Signals for communication
         self.signals = DatabaseSignals()
@@ -124,11 +130,19 @@ class DatabaseRunnable(QRunnable):
             # Create a new session
             with self.session_factory() as session:
                 # Execute the function with the session
-                result = self.func(session, *self.args, **self.kwargs)
 
+                # print("args ==> " , *self.args , "kwargs ==> " , **self.kwargs)
+                # try :
+                result = self.func(session, *self.args, **self.kwargs)
+                # except :
+                #     pass
+                #     result = self.func(session, self.args[0] if self.args else None)
+
+
+                print("Database result from fun --" , result)
                 # Emit the result via signals
                 self.signals.finished.emit(result)
-
+                self.result = result
                 # Call callback if provided
                 if self.callback and callable(self.callback):
                     self.callback(result=result, error=None)
@@ -158,29 +172,58 @@ def run_in_thread(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # Get global or create a new thread pool
-        thread_pool = getattr(wrapper, 'thread_pool', QThreadPool.globalInstance())
+        # Create an event loop to wait for the result
+        loop = QEventLoop()
 
-        # Create the runnable
-        runnable = DatabaseRunnable(
-            func,
-            get_session,  # Assumes get_session is defined elsewhere
-            *args,
-            **kwargs
-        )
+        # Create a timeout mechanism
+        timeout_timer = QTimer()
+        timeout_timer.setSingleShot(True)
+        timeout_timer.setInterval(10000)
 
-        # Start the runnable in the thread pool
+
+        result_container = [None]
+        error_container = [None]
+
+        thread_pool = QThreadPool.globalInstance()
+
+        runnable = DatabaseRunnable(func, get_session, *args, **kwargs)
+
+        def on_finished(result):
+            result_container[0] = result
+            loop.quit()
+
+        def on_error(error):
+            error_container[0] = error
+            loop.quit()
+
+        def on_timeout():
+            error_container[0] = TimeoutError("Database operation timed out")
+            loop.quit()
+
+        # Connect signals
+        runnable.signals.finished.connect(on_finished)
+        runnable.signals.error.connect(on_error)
+        timeout_timer.timeout.connect(on_timeout)
+
+        # Start the runnable and the timeout timer
         thread_pool.start(runnable)
+        timeout_timer.start()
 
-        # Return the signals for advanced control if needed
-        return runnable.signals
+        # Block and wait for the result
+        loop.exec_()
 
-    # Attach a thread pool to the wrapper if needed
-    wrapper.thread_pool = QThreadPool()
-    # Optional: Set max thread count (default is typically CPU core count)
-    wrapper.thread_pool.setMaxThreadCount(10)
+        # Stop the timeout timer
+        timeout_timer.stop()
+
+        # Raise any error or return the result
+        if error_container[0]:
+            raise error_container[0]
+
+        return result_container[0]
 
     return wrapper
+
+
 
 # class DatabaseThreadManager:
 #     _instance = None

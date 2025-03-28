@@ -4,7 +4,7 @@ import decimal
 from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select
 from sqlalchemy.sql import func
 
-from models import Base, get_session, run_in_thread
+from models import Base, run_in_thread
 from models.alchemy import DynamicSearch
 from utils.logger.logger import setup_logger
 
@@ -21,70 +21,70 @@ class FreeLancer(Base, DynamicSearch):
     updated_at = Column(DateTime, onupdate=func.now())
     created_at = Column(DateTime, default=func.now())
 
+    @run_in_thread
     @staticmethod
-    def get(id: str):
-        with get_session() as session:
+    def get(session , id: str):
 
-            try:
-                stmt = select(FreeLancer).where(FreeLancer.id == id)
-                result = session.execute(stmt)
-                freelancer = result.scalars().first()
-                session.refresh(freelancer)
-                return freelancer
-            except Exception as e:
-                session.rollback()
-                logger.error(e, exc_info=True)
+        try:
+            stmt = select(FreeLancer).where(FreeLancer.id == id)
+            result = session.execute(stmt)
+            freelancer = result.scalars().first()
+            session.refresh(freelancer)
+            return freelancer
+        except Exception as e:
+            session.rollback()
+            logger.error(e, exc_info=True)
 
+    @run_in_thread
     @staticmethod
-    def add(
+    def add(session,
             note: str,
             amount: decimal.Decimal,
             other_costs: str,
             date: datetime.date = None,
-    ):
-        with get_session() as session:
-            try:
-                employee = FreeLancer(
-                    note=note, amount=amount, other_costs=other_costs, date=date
-                )
-                session.add(employee)
-                session.commit()
-                session.refresh(employee)
-                return employee.id
-            except Exception as e:
-                session.rollback()
-                logger.error(e, exc_info=True)
-                return False
+            ):
+        try:
+            employee = FreeLancer(
+                note=note, amount=amount, other_costs=other_costs, date=date
+            )
+            session.add(employee)
+            session.commit()
+            session.refresh(employee)
+            return employee.id
+        except Exception as e:
+            session.rollback()
+            logger.error(e, exc_info=True)
+            return False
 
+    @run_in_thread
     @staticmethod
-    def update(updated_employee: dict):
-        with get_session() as session:
+    def update(session, updated_employee: dict):
 
-            try:
-                stmt = select(FreeLancer).where(FreeLancer.id == updated_employee["id"])
-                result = session.execute(stmt)
-                old = result.scalars().first()
-                if not old:
-                    logger.debug(f"Event with ID {old} not found.")
-                    return False  # Indicate that the event was not found
-                valid_keys = set(
-                    column
-                    for column in updated_employee.keys()
-                    if column in FreeLancer.__table__.columns
-                )
-                for key in updated_employee.keys():
-                    if key not in valid_keys:
-                        logger.debug(f"Invalid attribute '{key}' for Event model.")
-                        raise AttributeError(f"Event has no attribute '{key}'")
+        try:
+            stmt = select(FreeLancer).where(FreeLancer.id == updated_employee["id"])
+            result = session.execute(stmt)
+            old = result.scalars().first()
+            if not old:
+                logger.debug(f"Event with ID {old} not found.")
+                return False  # Indicate that the event was not found
+            valid_keys = set(
+                column
+                for column in updated_employee.keys()
+                if column in FreeLancer.__table__.columns
+            )
+            for key in updated_employee.keys():
+                if key not in valid_keys:
+                    logger.debug(f"Invalid attribute '{key}' for Event model.")
+                    raise AttributeError(f"Event has no attribute '{key}'")
 
-                for key, value in updated_employee.items():
-                    setattr(old, key, value)
+            for key, value in updated_employee.items():
+                setattr(old, key, value)
 
-                session.commit()
-                session.refresh(old)
-            except Exception as e:
-                session.rollback()
-                logger.error(e, exc_info=True)
+            session.commit()
+            session.refresh(old)
+        except Exception as e:
+            session.rollback()
+            logger.error(e, exc_info=True)
 
     @run_in_thread
     @staticmethod
@@ -99,24 +99,24 @@ class FreeLancer(Base, DynamicSearch):
         except Exception as e:
             logger.error(e, exc_info=True)
 
+    @run_in_thread
     @staticmethod
-    def remove(id: str):
-        with get_session() as session:
+    def remove(session, o ,  id: str):
 
-            try:
-                emp = FreeLancer.get(id)
-                if emp is not None:
-                    session.delete(emp)
-                    session.commit()
-                else:
-                    logger.error("Empty FreeLancer obj")
-            except Exception as e:
-                session.rollback()
-                logger.error(e, exc_info=True)
+        try:
+            emp = FreeLancer.get(id)
+            if emp is not None:
+                session.delete(emp)
+                session.commit()
+            else:
+                logger.error("Empty FreeLancer obj")
+        except Exception as e:
+            session.rollback()
+            logger.error(e, exc_info=True)
 
-    def search(self, column, value, operator="eq", **kwargs):
-        with get_session() as session:
+    @run_in_thread
+    def search(self, session, column, value, operator="eq", **kwargs):
+        result = self.where(column, value, session, operator=operator, **kwargs)
+        if len(result) == 0:
             result = self.where(column, value, session, operator=operator, **kwargs)
-            if len(result) == 0:
-                result = self.where(column, value, session, operator=operator, **kwargs)
-            return result
+        return result

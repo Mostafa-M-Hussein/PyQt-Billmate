@@ -2,3 +2,5 @@
 build
 dist
 logs
+database.db
+

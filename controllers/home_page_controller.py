@@ -1,7 +1,6 @@
 import datetime
 from decimal import Decimal
 
-from PyQt5 import sip
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtWidgets import QTableWidgetItem
 
@@ -38,7 +37,6 @@ class MainWindowController(BaseController):
                 payment_date,
             ) = row_data
             print(row_data)
-            print("A ======>" , amount_settled)
             if id_data is None or id_data is False:
                 id_data = -1
 
@@ -71,8 +69,11 @@ class MainWindowController(BaseController):
     def add_new_employee(
             self, name, salary, amount_settled, loan_from_salary, loan_date, status, payment_date
     ):
+
+
         """Add a new employee to the database."""
         emp = Employee.add(
+
             name=name,
             salary=salary,
             amount_settled=amount_settled,
@@ -80,10 +81,12 @@ class MainWindowController(BaseController):
             loan_date=loan_date,
             payment_status=status,
             payment_date=payment_date,
+
+
         )
-        if emp:
-            return emp.id
-        return False
+        print("Emp data==>" , emp )
+        return emp.id
+
 
     def update_existing_employee(
             self,
@@ -116,14 +119,14 @@ class MainWindowController(BaseController):
             return Decimal(amount_settled) + Decimal(loan_from_salary)
         return 0
 
-    def calculate_remaining_salary(self, salary, loan_from_salary , amount_settled ):
+    def calculate_remaining_salary(self, salary, loan_from_salary, amount_settled):
         """Calculate remaining salary."""
         if salary and loan_from_salary:
             return Decimal(salary) - Decimal(loan_from_salary) - Decimal(amount_settled)
         return 0
 
     def on_item_changed(self, item: QTableWidgetItem):
-        print("is removing rows ===> ", self.view.table_widget._is_removing_rows )
+        print("is removing rows ===> ", self.view.table_widget._is_removing_rows)
         # sip.isdeleted(self.view.table_widget)
         # self.view.table_widget.itemChanged.disconnect(self.on_item_changed)
         self.view.table_widget.blockSignals(True)
@@ -149,7 +152,6 @@ class MainWindowController(BaseController):
         # self.view.table_widget.itemChanged.connect(self.on_item_changed)
         self.view.table_widget.blockSignals(False)
 
-
     def update_field_value(self, row):
         """Update values in the table based on the current state."""
         salary = self.view.table_widget.item(row, 2)
@@ -168,7 +170,7 @@ class MainWindowController(BaseController):
 
         if amount_settled and not amount_settled.text():
             amount_settled.setText("0")
-            amount_settled.setData(Qt.UserRole , 0 )
+            amount_settled.setData(Qt.UserRole, 0)
 
         if loan_date and not loan_date:
             loan_date.setData(Qt.DisplayRole, str(datetime.date.today()))
@@ -191,7 +193,7 @@ class MainWindowController(BaseController):
 
         if self.check_fields([rem_from_salary, salary]):
             rem_from_salary_result = str(
-                self.calculate_remaining_salary(salary.text(), loan_from_salary.text() , amount_settled.text()  )
+                self.calculate_remaining_salary(salary.text(), loan_from_salary.text(), amount_settled.text())
             )
             rem_from_salary.setText(rem_from_salary_result)
             rem_from_salary.setData(Qt.UserRole, Decimal(rem_from_salary_result))
@@ -205,5 +207,5 @@ class MainWindowController(BaseController):
         self.view.showMaximized()
         # self.view.show()
 
-    def close(self) :
+    def close(self):
         self.view.close()

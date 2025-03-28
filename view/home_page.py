@@ -1,16 +1,16 @@
-import asyncio
 from typing import List
 
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import (
     QWidget,
     QTableWidgetItem,
     QTabWidget,
     QHBoxLayout,
     QSplitter,
-    QFrame, QMessageBox,
+    QFrame, QVBoxLayout, QStackedWidget,
 )
+from pyqtspinner import WaitingSpinner
 
 from controllers.company_owner_controller import CompanyOwnerController
 from controllers.company_page_controller import CompanyWindowController
@@ -18,19 +18,19 @@ from controllers.freelancer_page_controller import FreeLancerWindowController
 from models.constant import PaymentStatus, UserRoles
 from models.employee import Employee
 from utils.helpers import find_widget, load_stylesheet_from_resource
+from utils.patterns.singletone import SingletonMixin
 from utils.settings_manager import SettingManager
-from view.base_view import BaseView
 from view.ui.main_window import Ui_Form
 from view.widgets.table_widget import TableWidget, DelegatesType
 from view.widgets.text_edit_widget import TextEditWidget
 
-from  pyqtspinner import WaitingSpinner
 
-
-class MainWindow(QWidget):
+class MainWindow(QWidget, SingletonMixin):
+    _instance = None
 
     def __init__(self, controller=None, model=None):
         super().__init__()
+
         self.settings = SettingManager()
         self.controller = controller
         self.model = model
@@ -38,33 +38,61 @@ class MainWindow(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # uifile = resource_path([os.path.dirname(__file__), "ui", "main_window.ui"])
-        # uic.loadUi(uifile, self)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.setWindowTitle("MoneyMaker")
         self.setWindowIcon(QIcon(":icons/icons/icon.png"))
         self.setup_table_widget()
+        self._create_waiting_spinner()
+        self._setup_stack_widget()
         self.setup_tabs_and_layout()
         self.setup_controllers()
 
-    def update_items(self , result = None   , error  = None  ):
+    def update_items(self, result=None, error=None):
         print(len(result))
-        if error :
+        if error:
             raise Exception("Error in Employee get_all function..")
-
+        if len(result) >= 0:
+            self.switch_window("table")
         rows = self.create_table_item_widgets(result)
         self.table_widget.setRowItems(rows)
         self.table_widget.add_rows()
         self.table_widget.update()
 
+    def _create_waiting_spinner(self):
+        self.spinner_widget = QWidget()
+        # self.spinner_widget.setStyleSheet("background-color : red")
+        self.vbox = QVBoxLayout()
+        self.vbox.addWidget(self.spinner_widget)
+        self.spinner = WaitingSpinner(self.spinner_widget, color=QColor(105, 15, 117),
+                                      disable_parent_when_spinning=False)
+        self.spinner.start()
+
+        self.setLayout(self.vbox)
+
+    def _setup_stack_widget(self):
+        self.stack_widget = QStackedWidget()
+        self.stack_widget.addWidget(self.table_widget)
+        self.stack_widget.addWidget(self.spinner_widget)
+        self.switch_window("loading")
+
+    def switch_window(self, window="loading"):
+        if not self.stack_widget or not self.spinner_widget:
+            raise Exception("Init Window widgets error")
+
+        if window == "loading":
+            self.stack_widget.setCurrentWidget(self.spinner_widget)
+        elif window == "table":
+            self.stack_widget.setCurrentWidget(self.table_widget)
+
     def setup_table_widget(self):
+
         columns = self.get_column_headers()
-        result = self.get_employee_data()
-        print("result is ==> " , result )
+
         self.table_widget = TableWidget(
             columns=columns, controller=self.controller, parent=self
         )
+
         self.table_widget.setReadOnlyColumns([6, 7])
         self.table_widget.add_delegate(1, DelegatesType.StringDelegate)
         self.table_widget.add_delegate(2, DelegatesType.NumericalDelegate)
@@ -90,12 +118,14 @@ class MainWindow(QWidget):
 
         self.textEdit = TextEditWidget(self)
         self.splitter.addWidget(self.textEdit)
-        self.splitter.addWidget(self.table_widget)
-        self.splitter.setSizes([100, 300])
+
+        self.splitter.addWidget(self.stack_widget)
+        self.splitter.setSizes([300, 300])
         self.splitter.setStretchFactor(1, 1)
 
         self.hbox.addWidget(self.splitter)
         self.tab.setLayout(self.hbox)
+        self.update_table_data()
 
     def setup_controllers(self):
         role = self.settings.get_value('current_role')
@@ -111,8 +141,8 @@ class MainWindow(QWidget):
         self.freelancer_tab = FreeLancerWindowController(self.tabWidget.widget(1))
         self.company_owner_tab = CompanyOwnerController(self.tabWidget.widget(2))
 
-    def get_employee_data(self):
-        return Employee.get_all(callback=self.update_items )
+    def update_table_data(self):
+        return Employee.get_all(callback=self.update_items)
 
     def get_column_headers(self, role=Qt.DisplayRole):
         if Qt.DisplayRole == role:
@@ -182,7 +212,6 @@ class MainWindow(QWidget):
             items.append(item)
 
         return items
-
 
     def create_table_item_widget(self, for_display, for_edit):
         item = QTableWidgetItem()

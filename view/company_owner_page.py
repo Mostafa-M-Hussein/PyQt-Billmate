@@ -1,22 +1,24 @@
 from typing import List
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
     QWidget,
     QTableWidgetItem,
     QHBoxLayout,
-    QSplitter,
+    QSplitter, QVBoxLayout, QStackedWidget,
 )
 
 from models.company_owner import CompanyOwner
 from models.constant import OrderStatus, PaymentStatus
 from utils.helpers import load_stylesheet_from_resource
+from utils.patterns.singletone import SingletonMixin
 from view.base_view import BaseView
 from view.widgets.table_widget import TableWidget, DelegatesType
 from view.widgets.text_edit_widget import TextEditWidget
+from pyqtspinner import WaitingSpinner
 
-
-class CompanyOwnerWindow(BaseView):
+class CompanyOwnerWindow(BaseView , SingletonMixin):
 
     def __init__(self, widget: QWidget, controller):
         self.table_widget = None
@@ -27,6 +29,7 @@ class CompanyOwnerWindow(BaseView):
 
     def initUi(self):
         self.setup_table_widget()
+
 
     def get_column_headers(self, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
@@ -75,11 +78,38 @@ class CompanyOwnerWindow(BaseView):
         print(len(result))
         if error:
             raise Exception("Error in Employee get_all function..")
-
+        if len(result) >= 0:
+            self.switch_window("table")
         rows = self.create_table_item_widgets(result)
         self.table_widget.setRowItems(rows)
         self.table_widget.add_rows()
         self.table_widget.update()
+
+    def _create_waiting_spinner(self):
+        self.spinner_widget = QWidget()
+        # self.spinner_widget.setStyleSheet("background-color : red")
+        self.vbox = QVBoxLayout()
+        self.vbox.addWidget(self.spinner_widget)
+        self.spinner = WaitingSpinner(self.spinner_widget, color=QColor(105, 15, 117),
+                                      disable_parent_when_spinning=False)
+        self.spinner.start()
+
+        # self.widget.setLayout(self.vbox)
+
+    def _setup_stack_widget(self):
+        self.stack_widget = QStackedWidget()
+        self.stack_widget.addWidget(self.table_widget)
+        self.stack_widget.addWidget(self.spinner_widget)
+        self.switch_window("loading")
+
+    def switch_window(self, window="loading"):
+        if not self.stack_widget or not self.spinner_widget:
+            raise Exception("Init Window widgets error")
+
+        if window == "loading":
+            self.stack_widget.setCurrentWidget(self.spinner_widget)
+        elif window == "table":
+            self.stack_widget.setCurrentWidget(self.table_widget)
 
     def create_table_item_widgets(self, rows):
         items = []
@@ -144,12 +174,14 @@ class CompanyOwnerWindow(BaseView):
         self.table_widget.add_delegate(14, DelegatesType.StringDelegate)
         self.table_widget.add_delegate(15, DelegatesType.StringDelegate)
         self.table_widget.itemChanged.connect(self.controller.on_item_changed)
-
+        self._create_waiting_spinner()
+        self._setup_stack_widget()
         self.hbox: QHBoxLayout = QHBoxLayout()
         self.splitter: QSplitter = QSplitter(Qt.Horizontal)
         self.textEdit = TextEditWidget(self)
         self.splitter.addWidget(self.textEdit)
-        self.splitter.addWidget(self.table_widget)
+        self.splitter.addWidget(self.stack_widget)
+
         self.splitter.setSizes([300, 300])
         self.splitter.setStretchFactor(1, 1)
         self.hbox.addWidget(self.splitter)

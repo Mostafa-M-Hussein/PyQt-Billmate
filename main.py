@@ -76,7 +76,6 @@ class StartupWorker(QObject):
 
 
 
-
             self.startup_complete.emit(main_window)
 
         except Exception as e:
@@ -92,7 +91,7 @@ class Main:
 
     def run(self):
         ensure_tables()
-        # seed(200)
+        # seed(5)
         self.app = QApplication(sys.argv)
         self.app.setStyleSheet(load_stylesheet_from_resource())
         self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -105,12 +104,12 @@ class Main:
 
         main_window = MainWindowController()
 
-        QTimer.singleShot(3500 , lambda  : self.on_startup_complete(main_window))
+        QTimer.singleShot(0 , lambda  : self.on_startup_complete(main_window))
 
 
-        for t in threading.enumerate() :
-            print(t.is_alive())
-            print(t.name)
+        # for t in threading.enumerate() :
+        #     print(t.is_alive())
+        #     print(t.name)
 
 
         sys.exit(self.app.exec_())

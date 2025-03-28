@@ -25,3 +25,4 @@ class BaseView(ABC):
     @abstractmethod
     def setup_table_widget(self):
         raise NotImplementedError(f"No Implemented {self.__name__}")
+

@@ -129,7 +129,7 @@ class TableWidget(QTableWidget):
                             is_order_retrieved = OrderStatus.get_status(is_order_retrieved)
 
 
-                        if OrderStatus.REFUSED is  is_order_retrieved and column in [4, 5, 8]:
+                        if OrderStatus.REFUSED is  is_order_retrieved and column in [4, 5, 8 , 10 , 11 ]:
                             continue
 
                     total += value
@@ -402,6 +402,7 @@ class TableAction:
 
         hidden_item = self.widget.item(item_row, self.widget.hidden_column_index).text()
         if hidden_item != -1:
+            print("hidden item is ==>"  , hidden_item)
             self.current_object.remove(hidden_item)
 
         self.widget.removeRow(item_row)
