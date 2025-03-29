@@ -114,9 +114,10 @@ class CompanyWindowController(BaseController):
                 paid_amounts=paid_amounts,
                 note=str(note),
                 monthly_payment_due_date=monthly_payment_due_date,
+                callback=lambda result, error: self.set_item_id(result, error, row)
             )
-            item = self.view.table_widget.item(row, 0)
-            item.setData(Qt.UserRole, company_id)
+
+
         elif id_data != -1:
             print("update company")
             update_dict =   {
@@ -138,3 +139,11 @@ class CompanyWindowController(BaseController):
             Company.update(
               update_dict
             )
+
+    def set_item_id(self, result, error, row):
+        if error:
+            raise error
+
+        item = self.view.table_widget.item(row, 0)
+        item.setData(Qt.UserRole, result.id)
+        item.setData(Qt.DisplayRole, result.id)

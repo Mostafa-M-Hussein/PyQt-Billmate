@@ -10,12 +10,13 @@ from sqlalchemy import (
     DateTime,
     Date,
     select,
-    Enum as SqlEnum, ForeignKey
+    Enum as SqlEnum, ForeignKey ,
+    Index ,
 )
 from sqlalchemy.orm import relationship, selectinload, joinedload
 from sqlalchemy.sql import func
 
-from models import Base, get_session, run_in_thread, run_in_thread_search
+from models import Base, run_in_thread, run_in_thread_search
 from models.constant import PaymentStatus, OrderStatus
 from utils.logger.logger import setup_logger
 
@@ -31,6 +32,12 @@ class Coupon(Base, DynamicSearch):
     discount = Column(DECIMAL(10, 2))
     created_at = Column(DateTime, default=func.now())
     company_owners = relationship("CompanyOwner", back_populates="coupons")
+
+    __table_args__ = (
+        Index('idx_coupon_code', 'code'),
+        Index('idx_coupon_discount', 'discount'),
+    )
+
 
     @run_in_thread
     @staticmethod
@@ -130,9 +137,13 @@ class Coupon(Base, DynamicSearch):
             session.rollback()
             logger.error(e, exc_info=True)
 
-    @run_in_thread
-    def search(self, session, column, value):
-        return self.where(column, value, session)
+    @run_in_thread_search
+    def search(self, session, column, value, *args, **kwargs):
+        print("type is ==>", type(session), type(column))
+        result = self.where(column, value, session, *args, **kwargs)
+        if len(result) == 0:
+            result = self.where(column, value, session, *args, **kwargs)
+        return result
 
 
 class ShippingCompany(Base):
@@ -143,46 +154,51 @@ class ShippingCompany(Base):
     company_owners = relationship("CompanyOwner", back_populates="shippings")
     companys = relationship("Company", back_populates="shippings")
     created_at = Column(DateTime, default=func.now())
+    __table_args__ = (
+        Index('idx_shipping_name', 'name'),
+        Index('idx_shipping_percentage', 'percentage'),
+    )
 
+    @run_in_thread
     @staticmethod
-    def get(name: str):
-        with get_session() as session:
-            try:
-                stmt = select(ShippingCompany).where(ShippingCompany.name == name)
-                result = session.execute(stmt)
-                shipping_company = result.scalars().first()
-                if shipping_company:
-                    session.refresh(shipping_company)
-                return shipping_company
-            except Exception as e:
-                session.rollback()
-                logger.error(e, exc_info=True)
-                return None
+    def get(session, name: str):
+        try:
+            stmt = select(ShippingCompany).where(ShippingCompany.name == name)
+            result = session.execute(stmt)
+            shipping_company = result.scalars().first()
+            if shipping_company:
+                session.refresh(shipping_company)
+            return shipping_company
+        except Exception as e:
+            session.rollback()
+            logger.error(e, exc_info=True)
+            return None
 
+    @run_in_thread
     @staticmethod
     def add(
+            session,
             name: str,
             percentage: decimal.Decimal,
 
     ):
-        with get_session() as session:
-            try:
-                print("add new company")
-                if len(name) > 0 and percentage:
-                    shipping = ShippingCompany(
-                        name=name,
-                        percentage=percentage,
+        try:
+            print("add new company")
+            if len(name) > 0 and percentage:
+                shipping = ShippingCompany(
+                    name=name,
+                    percentage=percentage,
 
-                    )
-                    session.add(shipping)
-                    session.commit()
-                    # session.refresh(coupon)
-                    return shipping.id
-                return False
-            except Exception as e:
-                session.rollback()
-                logger.error(e, exc_info=True)
-                return False
+                )
+                session.add(shipping)
+                session.commit()
+                # session.refresh(coupon)
+                return shipping.id
+            return False
+        except Exception as e:
+            session.rollback()
+            logger.error(e, exc_info=True)
+            return False
 
     @run_in_thread
     @staticmethod
@@ -229,11 +245,12 @@ class ShippingCompany(Base):
 
     @run_in_thread
     @staticmethod
-    def remove(session,  o  , id: str):
-
+    def remove(session, name: str):
         try:
-            emp = ShippingCompany.get(id)
-            session.delete(emp)
+            stmt = select(ShippingCompany).where(ShippingCompany.name == name)
+            result = session.execute(stmt)
+            shipping_company = result.scalars().first()
+            session.delete(shipping_company)
             session.commit()
         except Exception as e:
             session.rollback()
@@ -247,6 +264,10 @@ class Payment(Base):
     percentage = Column(DECIMAL(10, 2), default=0)
     company_owners = relationship("CompanyOwner", back_populates="payments")
     created_at = Column(DateTime, default=func.now())
+    __table_args__ = (
+        Index('idx_payment_code', 'name'),
+        Index('idx_payment_percentage', 'percentage'),
+    )
 
     @run_in_thread
     @staticmethod
@@ -334,10 +355,12 @@ class Payment(Base):
 
     @run_in_thread
     @staticmethod
-    def remove(session, o ,  id: str):
+    def remove(session, name: str):
         try:
-            emp = Payment.get(id)
-            session.delete(emp)
+            stmt = select(Payment).where(Payment.name == name)
+            result = session.execute(stmt)
+            payment = result.scalars().first()
+            session.delete(payment)
             session.commit()
         except Exception as e:
             session.rollback()
@@ -372,6 +395,12 @@ class CompanyOwner(Base, DynamicSearch):
     coupons = relationship("Coupon", back_populates="company_owners")
     shippings = relationship("ShippingCompany", back_populates="company_owners")
     payments = relationship("Payment", back_populates="company_owners")
+
+    __table_args__ = (
+        Index('idx_coupons_id', 'coupons_id'),
+        Index('idx_shipping_id', 'shipping_id'),  # Index on shipping_id
+        Index('idx_payment_id', 'payment_id'),  # Index on payment_id
+    )
 
     @run_in_thread
     @staticmethod
@@ -413,33 +442,39 @@ class CompanyOwner(Base, DynamicSearch):
             shipping_id = None
             payment_id = None
             if coupon_code:
-                coupon = Coupon.get(code=coupon_code)
+                stmt = select(Coupon).where(Coupon.code == coupon_code)
+                result = session.execute(stmt)
+                coupon = result.scalars().first()
                 if coupon:
                     print("using existsing coupon ")
                     coupon_id = coupon.id
                     print("coupon_code id in db is ==> ", coupon_code)
                 else:
-                    coupon = Coupon.add(code=coupon_code, discount=coupon_discount)
+                    coupon = Coupon(code=coupon_code, discount=coupon_discount)
                     session.flush()
                     coupon_id = coupon
 
             if shipping_name:
-                shipping = ShippingCompany.get(name=shipping_name)
+                stmt = select(ShippingCompany).where(ShippingCompany.name == shipping_name)
+                result = session.execute(stmt)
+                shipping = result.scalars().first()
                 if shipping:
                     print("using existsing shipping id ")
                     shipping_id = shipping.id
                 else:
-                    shipping = ShippingCompany.add(name=shipping_name, percentage=shipping_percentage)
+                    shipping = ShippingCompany(name=shipping_name, percentage=shipping_percentage)
                     session.flush()
                     shipping_id = shipping
 
             if payment_name:
-                payment = Payment.get(name=payment_name)
+                stmt = select(Payment).where(Payment.name == payment_name)
+                result = session.execute(stmt)
+                payment = result.scalars().first()
                 if payment:
                     print("using existing payment id ")
                     payment_id = payment.id
                 else:
-                    payment = Payment.add(name=payment_name, percentage=payment_percentage)
+                    payment = Payment(name=payment_name, percentage=payment_percentage)
                     session.flush()
                     payment_id = payment
 
@@ -462,7 +497,7 @@ class CompanyOwner(Base, DynamicSearch):
             )
             session.add(company)
             session.commit()
-            return company.id
+            return company
         except Exception as e:
             session.rollback()
             logger.error(e, exc_info=True)
@@ -512,39 +547,41 @@ class CompanyOwner(Base, DynamicSearch):
                 payment = None
                 if payment_data.get('name'):
                     # Try to get existing payment
-                    payment = Payment.get(payment_data['name'])
+                    stmt = select(Payment).where(Payment.name == payment_data['name'])
+                    result = session.execute(stmt)
+                    payment = result.scalars().first()
                     if payment:
                         old.payment_id = payment.id
                     else:
                         # Create new payment
-                        new_payment = Payment.add(
+                        new_payment = Payment(
                             name=payment_data['name'],
                             percentage=payment_data['percentage']
                         )
                         session.flush()  # Ensure ID is generated
-                        old.payment_id = new_payment
+                        old.payment_id = new_payment.id
 
-            # Handle Shipping Update
+                        # Handle Shipping Update
             if 'shippings' in updated:
                 shipping_data = updated['shippings']
-
                 shipping = None
                 if shipping_data.get('name'):
-                    # Try to get existing shipping using corrected get method
-                    shipping = ShippingCompany.get(shipping_data['name'])
+                    stmt = select(ShippingCompany).where(ShippingCompany.name == shipping_data['name'])
+                    result = session.execute(stmt)
+                    shipping = result.scalars().first()
                     if shipping:
                         old.shipping_id = shipping.id
                     else:
                         # Create new shipping if it doesn't exist
-                        new_shipping_id = ShippingCompany.add(
+                        shipping = ShippingCompany(
                             name=shipping_data['name'],
-                            percentage=shipping_data['percentage']
+                            percentage=shipping_data['percentage'],
+
                         )
-                        if new_shipping_id:
-                            old.shipping_id = new_shipping_id
-                        else:
-                            print("Failed to add new shipping company")
-                            raise ValueError("Failed to add shipping company")
+                        session.add(shipping)
+                        session.flush()
+
+                        old.shipping_id = shipping.id
 
             # Handle Coupon Update
             if 'coupons' in updated:
@@ -552,19 +589,24 @@ class CompanyOwner(Base, DynamicSearch):
                 coupon = None
                 if coupon_data.get('code'):
                     # Try to get existing coupon
-                    coupon = Coupon.get(code=coupon_data['code'])
+                    stmt = select(Coupon).where(Coupon.code == coupon_data['code'])
+                    result = session.execute(stmt)
+                    coupon = result.scalars().first()
                     print("found old code ==> ", coupon)
                     if coupon:
                         print("linked it")
                         old.coupons_id = coupon.id
                     else:
                         # Create new coupon
-                        new_coupon = Coupon.add(
+
+                        new_coupon = Coupon(
                             code=coupon_data['code'],
-                            discount=coupon_data['discount']
+                            discount=coupon_data['discount'],
+
                         )
+                        session.add(coupon)
                         session.flush()  # Ensure ID is generated
-                        old.coupons_id = new_coupon
+                        old.coupons_id = new_coupon.id
 
             # Validate and update other fields
             for key in updated.keys():
@@ -580,10 +622,6 @@ class CompanyOwner(Base, DynamicSearch):
             # Commit changes
             session.commit()
             session.refresh(old)
-
-            # Verify relationships after refresh
-            # if 'payments' in updated:
-            #     assert old.payments is not None, "Payment relationship not properly loaded"
 
             return old
 
@@ -614,7 +652,7 @@ class CompanyOwner(Base, DynamicSearch):
 
     @run_in_thread
     @staticmethod
-    def remove(session,  o , id: str):
+    def remove(session, o, id: str):
 
         try:
             emp = CompanyOwner.get(id)
@@ -629,11 +667,11 @@ class CompanyOwner(Base, DynamicSearch):
             logger.error(e, exc_info=True)
 
     @run_in_thread_search
-    def search(self, session, column, value):
+    def search(self, session, column, value, *args, **kwargs):
         print("type is ==>", type(session), type(column))
-        result = self.where(column, value, session)
+        result = self.where(column, value, session, *args, **kwargs)
         if len(result) == 0:
-            result = self.where(column, value, session)
+            result = self.where(column, value, session, *args, **kwargs)
         return result
 
 
@@ -685,7 +723,9 @@ class Company(Base, DynamicSearch):
         try:
             shipping_id = None
             if shipping_name:
-                shipping = ShippingCompany.get(shipping_name)
+                stmt = select(ShippingCompany).where(ShippingCompany.name == shipping_name)
+                result = session.execute(stmt)
+                shipping = result.scalars().first()
                 if shipping:
                     print("Using existing shipping company")
                     shipping_id = shipping.id
@@ -693,7 +733,7 @@ class Company(Base, DynamicSearch):
                 else:
                     if shipping_percentage is None:
                         raise ValueError("shipping_percentage is required when creating a new shipping company")
-                    new_shipping = ShippingCompany.add(
+                    new_shipping = ShippingCompany(
                         name=shipping_name,
                         percentage=shipping_percentage
                     )
@@ -716,7 +756,7 @@ class Company(Base, DynamicSearch):
             session.add(company)
             session.commit()
             session.refresh(company)
-            return company.id
+            return company
 
 
         except Exception as e:
@@ -740,17 +780,19 @@ class Company(Base, DynamicSearch):
                 shipping = None
                 if shipping_data.get('name'):
                     # Try to get existing shipping using corrected get method
-                    shipping = ShippingCompany.get(shipping_data['name'])
+                    stmt = select(ShippingCompany).where(ShippingCompany.name == shipping_data['name'])
+                    result = session.execute(stmt)
+                    shipping = result.scalars().first()
                     if shipping:
                         old.shipping_id = shipping.id
                     else:
                         # Create new shipping if it doesn't exist
-                        new_shipping_id = ShippingCompany.add(
+                        new_shipping_id = ShippingCompany(
                             name=shipping_data['name'],
                             percentage=shipping_data['percentage']
                         )
                         if new_shipping_id:
-                            old.shipping_id = new_shipping_id
+                            old.shipping_id = new_shipping_id.id
                         else:
                             print("Failed to add new shipping company")
                             raise ValueError("Failed to add shipping company")
@@ -790,12 +832,12 @@ class Company(Base, DynamicSearch):
 
     @run_in_thread
     @staticmethod
-    def remove(session, o , id: str):
+    def remove(session, o, id: str):
         try:
             stmt = (
                 select(Company)
                 .where(Company.id == id)
-                 # Ensures shippings is loaded immediately
+                # Ensures shippings is loaded immediately
             )
             result = session.execute(stmt)
             company = result.scalars().first()
@@ -807,9 +849,9 @@ class Company(Base, DynamicSearch):
             logger.error(e, exc_info=True)
 
     @run_in_thread_search
-    def search(self  ,    session  , column, value):
-        print( "type is ==>", type(session) , type(column))
-        result = self.where(column, value, session)
+    def search(self, session, column, value, *args, **kwargs):
+        print("type is ==>", type(session), type(column))
+        result = self.where(column, value, session, *args, **kwargs)
         if len(result) == 0:
-            result = self.where(column, value, session)
+            result = self.where(column, value, session, *args, **kwargs)
         return result

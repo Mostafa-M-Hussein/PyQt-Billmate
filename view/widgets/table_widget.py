@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QMenu,
     QAction,
     QMessageBox,
-    QFileDialog, )
+    QFileDialog, QApplication, )
 
 from models.alchemy import *
 from models.company_owner import CompanyOwner, Company
@@ -328,11 +328,15 @@ class TableWidget(QTableWidget):
             for c in range(self.columnCount()):
                 self.resizeColumnToContents(c)
 
+
         # Add sum row if needed
 
         self.add_sum_row()
 
         self.blockSignals(False)
+
+
+
 
     @property
     def read_only_columns(self):
@@ -397,11 +401,14 @@ class TableAction:
             return
 
         item_row = item.row()
+
+
         if item_row == self.widget.sum_row_index:
             return
 
         hidden_item = self.widget.item(item_row, self.widget.hidden_column_index).text()
-        if hidden_item != -1:
+        print("id is ..." , hidden_item)
+        if hidden_item != "-1":
             print("hidden item is ==>"  , hidden_item)
             self.current_object.remove(hidden_item)
 

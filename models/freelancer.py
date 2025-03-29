@@ -1,7 +1,7 @@
 import datetime
 import decimal
 
-from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select
+from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select , Index
 from sqlalchemy.sql import func
 
 from models import Base, run_in_thread, run_in_thread_search
@@ -20,6 +20,13 @@ class FreeLancer(Base, DynamicSearch):
     date = Column(Date, nullable=True)
     updated_at = Column(DateTime, onupdate=func.now())
     created_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        Index('idx_freelancer_name', 'note'),
+        Index('idx_freelancer_payment_amount', 'amount'),
+        Index('idx_freelancer_other_costs', 'other_costs'),
+        Index('idx_freelancer_date', 'date'),
+    )
 
     @run_in_thread
     @staticmethod
@@ -50,7 +57,7 @@ class FreeLancer(Base, DynamicSearch):
             session.add(employee)
             session.commit()
             session.refresh(employee)
-            return employee.id
+            return employee
         except Exception as e:
             session.rollback()
             logger.error(e, exc_info=True)
@@ -104,9 +111,11 @@ class FreeLancer(Base, DynamicSearch):
     def remove(session, o ,  id: str):
 
         try:
-            emp = FreeLancer.get(id)
-            if emp is not None:
-                session.delete(emp)
+            stmt = select(FreeLancer).where(FreeLancer.id == id)
+            result = session.execute(stmt)
+            freelancer = result.scalars().first()
+            if freelancer is not None:
+                session.delete(freelancer)
                 session.commit()
             else:
                 logger.error("Empty FreeLancer obj")
@@ -115,9 +124,9 @@ class FreeLancer(Base, DynamicSearch):
             logger.error(e, exc_info=True)
 
     @run_in_thread_search
-    def search(self, session, column, value):
+    def search(self, session, column, value, *args, **kwargs):
         print("type is ==>", type(session), type(column))
-        result = self.where(column, value, session)
+        result = self.where(column, value, session, *args, **kwargs)
         if len(result) == 0:
-            result = self.where(column, value, session)
+            result = self.where(column, value, session, *args, **kwargs)
         return result

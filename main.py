@@ -11,7 +11,7 @@ from controllers.home_page_controller import MainWindowController
 from controllers.login_page_controller import LoginWindowController
 from models.db_context import ensure_tables
 from utils.helpers import load_stylesheet_from_resource
-from utils.seeder import seed
+from utils.seeder import seed, seed_users
 from utils.settings_manager import SettingManager
 from PyQt5 import sip
 from resources import  resources_rc
@@ -91,7 +91,7 @@ class Main:
 
     def run(self):
         ensure_tables()
-        # seed(5)
+        seed_users()
         self.app = QApplication(sys.argv)
         self.app.setStyleSheet(load_stylesheet_from_resource())
         self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -101,10 +101,9 @@ class Main:
         self.splash_screen = AnimatedSplashScreen(":icons/icons/loading.gif")
         self.splash_screen.start()
         # self.app.processEvents(QEventLoop.AllEvents)
+        main_window = LoginWindowController()
 
-        main_window = MainWindowController()
-
-        QTimer.singleShot(0 , lambda  : self.on_startup_complete(main_window))
+        QTimer.singleShot(3000 , lambda  : self.on_startup_complete(main_window))
 
 
         # for t in threading.enumerate() :

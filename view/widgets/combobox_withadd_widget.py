@@ -1,9 +1,9 @@
 import decimal
 
-from PyQt5.QtCore import QRect, Qt, QPoint
+from PyQt5.QtCore import QRect, Qt, QTimer
 from PyQt5.QtGui import QPainter, QColor, QDoubleValidator, QIcon
 from PyQt5.QtWidgets import QLineEdit, QDialog, QDialogButtonBox, QFormLayout, QLabel, QStyledItemDelegate, QStyle, \
-    QComboBox, QMessageBox, QMenu, QAction, QApplication
+    QComboBox, QMessageBox, QMenu, QAction, QApplication, QListView
 
 from models.company_owner import Coupon, Payment, ShippingCompany
 
@@ -148,8 +148,6 @@ class ComboBoxWithAdd(QComboBox):
         self.view().setMouseTracking(True)
         self.activated.connect(self._handle_activation)
 
-
-
     def show_context_menu(self, position):
         context_menu = QMenu(self)
         context_menu.setLayoutDirection(Qt.LeftToRight)
@@ -168,8 +166,7 @@ class ComboBoxWithAdd(QComboBox):
         clipboard = QApplication.clipboard()
         clipboard.setText(text)
 
-
-    def remove_current_item(self ):
+    def remove_current_item(self):
         current_index = self.currentIndex()
         if current_index >= 0:
             text = self.currentText()
@@ -187,25 +184,51 @@ class ComboBoxWithAdd(QComboBox):
                 else:
                     raise Exception("error when remove the combobox item selected")
 
-
-
                 self.removeItem(current_index)
 
-
-
-
-
-
-
     def add_delegate_index(self):
+        if self.delegate.add_item_index != -1:
+            self.removeItem(self.delegate.add_item_index)
+            self.addItem(self.add_item_text)
         self.delegate.add_item_index = self.count() - 1
 
     def add_item(self, display_data: str, hidden_data: decimal.Decimal):
         insert_position = self.count()
         self.insertItem(insert_position, display_data, hidden_data)
         self.setItemData(insert_position, hidden_data, Qt.UserRole)
-        # self.setCurrentIndex(insert_position)
+        #todo remove me if i rais an exception
 
+        view = self.view()
+        if isinstance(view, QListView):
+            # Calculate WIDTH based on content
+            width = view.sizeHintForColumn(0)  # Width of the longest item
+            width += 2 * view.frameWidth()  # Add border width
+
+            # Add scrollbar width if visible
+            if view.verticalScrollBar().isVisible():
+                scrollbar_width = view.style().pixelMetric(QStyle.PM_ScrollBarExtent)
+                width += scrollbar_width
+
+            view.setMinimumWidth(width)
+
+            # Calculate HEIGHT based on number of items
+            row_height = view.sizeHintForRow(0)  # Height of a single row
+            num_items = self.model().rowCount()
+            max_visible = self.maxVisibleItems()  # Max items to show without scrolling
+
+            # Total height = row height * min(items, max_visible) + frame
+            visible_rows = min(num_items, max_visible)
+            height = row_height * visible_rows + 2 * view.frameWidth()
+
+            # Ensure height doesn't exceed screen space (optional)
+            screen_height = QApplication.primaryScreen().availableGeometry().height()
+            height = min(height, int(screen_height * 0.75))  # Max 75% of screen
+
+            view.setMinimumHeight(height)
+
+        if self.view().isVisible() :
+            QTimer.singleShot(0 , self.showPopup )
+        # self.setCurrentIndex(insert_position)
 
     def _handle_activation(self, index: int):
         if index == self.delegate.add_item_index:
@@ -232,6 +255,8 @@ class ComboBoxWithAdd(QComboBox):
                     ShippingCompany.add(text1, text2)
                 else:
                     raise Exception("error in line 151 combobx_withadd_widget")
+
+                self.add_delegate_index()
 
     def currentData(self, role=Qt.UserRole):
         index = self.currentIndex()

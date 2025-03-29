@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+from functools import partial
 
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -49,10 +50,10 @@ class MainWindowController(BaseController):
                     loan_date=loan_date,
                     status=PaymentStatus.get_status(status) if type(status) == str else status,
                     payment_date=payment_date,
+                    row = row
                 )
-                if emp_id:
-                    item = self.view.table_widget.item(row, 0)
-                    item.setData(Qt.UserRole, emp_id)
+
+
 
             elif id_data != -1:
                 self.update_existing_employee(
@@ -67,7 +68,7 @@ class MainWindowController(BaseController):
                 )
 
     def add_new_employee(
-            self, name, salary, amount_settled, loan_from_salary, loan_date, status, payment_date
+            self, name, salary, amount_settled, loan_from_salary, loan_date, status, payment_date  ,row
     ):
 
 
@@ -81,15 +82,27 @@ class MainWindowController(BaseController):
             loan_date=loan_date,
             payment_status=status,
             payment_date=payment_date,
+            callback = lambda  result , error : self.set_item_id( result , error  , row )
 
 
         )
+
+
         print("Emp data==>" , emp )
-        return emp.id
+
+    def set_item_id(self, result, error, row):
+        if error :
+            raise error
+        item = self.view.table_widget.item(row, 0)
+        item.setData(Qt.UserRole, result.id )
+        item.setData(Qt.DisplayRole, result.id )
+
+
 
 
     def update_existing_employee(
             self,
+
             employee_id,
             name,
             salary,

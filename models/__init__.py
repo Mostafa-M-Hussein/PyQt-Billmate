@@ -1,9 +1,9 @@
 import functools
 import traceback
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, QObject, QEventLoop, QTimer
+from PyQt5.QtWidgets import QApplication
 from sqlalchemy import create_engine
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -11,6 +11,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from utils.logger.logger import setup_logger
 
 db_url = "sqlite:///database.db"
+engine = create_engine(db_url, echo=False)
+
 # db_url = f"mysql+pymysql://moado:P%40$$wOrd25@203.161.56.185:3306/app_db"
 # engine = create_engine(
 #     db_url,
@@ -22,15 +24,13 @@ db_url = "sqlite:///database.db"
 #     pool_recycle=1800,  # Reduced from 3600 - recycle connections more frequently
 #     connect_args={
 #         "connect_timeout": 10,  # Set timeout for connection attempts
-#         "read_timeout": 30,     # Set timeout for read operations
-#         "write_timeout": 30     # Set timeout for write operations
+#         "read_timeout": 30,  # Set timeout for read operations
+#         "write_timeout": 30  # Set timeout for write operations
 #     }
 # )
-engine = create_engine(db_url, echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine, expire_on_commit=False)
 logger = setup_logger("db", "logs/db.log")
-db_executor = ThreadPoolExecutor(max_workers=5)
 
 
 #
@@ -184,7 +184,7 @@ def run_in_thread(func):
         error_container = [None]
 
         thread_pool = QThreadPool.globalInstance()
-        print("args==>", args, kwargs)
+
         runnable = DatabaseRunnable(func, get_session, *args, **kwargs)
 
         def on_finished(result):
@@ -209,8 +209,8 @@ def run_in_thread(func):
         timeout_timer.start()
 
         # Block and wait for the result
-        loop.exec_()
-
+        # loop.exec_()
+        # QApplication.processEvents()
         # Stop the timeout timer
         timeout_timer.stop()
 
@@ -218,7 +218,7 @@ def run_in_thread(func):
         if error_container[0]:
             raise error_container[0]
 
-        return result_container[0]
+        return runnable.signals
 
     return wrapper
 

@@ -167,11 +167,11 @@ class Employee(Base, DynamicSearch):
             logger.error(e, exc_info=True)
 
     @run_in_thread_search
-    def search(self  ,    session  , column, value):
+    def search(self  ,    session  , column, value , *args , **kwargs):
         print( "type is ==>", type(session) , type(column))
-        result = self.where(column, value, session)
+        result = self.where(column, value, session ,  *args , **kwargs )
         if len(result) == 0:
-            result = self.where(column, value, session)
+            result = self.where(column, value, session ,  *args , **kwargs )
         return result
 
 # Employee.search("name" , "")

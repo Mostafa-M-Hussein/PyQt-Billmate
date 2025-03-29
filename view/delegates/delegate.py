@@ -4,7 +4,7 @@ import typing
 from datetime import datetime
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import QDate, Qt, QModelIndex, QRectF, QSize, QLocale, QTimer, QPoint
+from PyQt5.QtCore import QDate, Qt, QModelIndex, QRectF, QSize, QLocale, QTimer
 from PyQt5.QtGui import QPainterPath, QColor, QBrush, QPainter, QDoubleValidator
 from PyQt5.QtWidgets import (
     QStyledItemDelegate,
@@ -31,19 +31,23 @@ class DelegatesType(enum.Enum):
     NumericalDelegate = 6
     StringDelegate = 7
 
+
 class NumericalDelegate(QStyledItemDelegate):
     """
     Delegate to validate input for numerical values in QTableWidget cells.
     Allows integers and floating-point numbers.
     """
-    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem', index: QModelIndex) -> typing.Optional[QWidget]:
+
+    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem', index: QModelIndex) -> \
+            typing.Optional[QWidget]:
         editor = QLineEdit(parent)
         # Use QDoubleValidator directly
-        validator = QDoubleValidator(parent) # For integers and floats
+        validator = QDoubleValidator(parent)  # For integers and floats
         editor.setValidator(validator)
         return editor
 
-    def setModelData(self, editor: QWidget, model: typing.Optional[QtCore.QAbstractItemModel], index: QModelIndex) -> None:
+    def setModelData(self, editor: QWidget, model: typing.Optional[QtCore.QAbstractItemModel],
+                     index: QModelIndex) -> None:
         if isinstance(editor, QLineEdit):
             text = editor.text()
             if self.validate_input(text):
@@ -59,10 +63,11 @@ class NumericalDelegate(QStyledItemDelegate):
         Validates if the input text is a valid numerical value (integer or float).
         """
         try:
-            QLocale().toDouble(text) # Still use QLocale().toDouble for parsing with locale awareness
+            QLocale().toDouble(text)  # Still use QLocale().toDouble for parsing with locale awareness
             return True
         except:
             return False
+
 
 class StringDelegate(QStyledItemDelegate):
     """
@@ -70,11 +75,14 @@ class StringDelegate(QStyledItemDelegate):
     By default, it ensures that the input is not empty and is a string.
     You can customize `validate_input` for more specific string validation.
     """
-    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem', index: QModelIndex) -> typing.Optional[QWidget]:
+
+    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem', index: QModelIndex) -> \
+            typing.Optional[QWidget]:
         editor = QLineEdit(parent)
         return editor
 
-    def setModelData(self, editor: QWidget, model: typing.Optional[QtCore.QAbstractItemModel], index: QModelIndex) -> None:
+    def setModelData(self, editor: QWidget, model: typing.Optional[QtCore.QAbstractItemModel],
+                     index: QModelIndex) -> None:
         if isinstance(editor, QLineEdit):
             text = editor.text()
             if self.validate_input(text):
@@ -84,13 +92,12 @@ class StringDelegate(QStyledItemDelegate):
                 # Revert to the original data
                 model.setData(index, index.data(Qt.DisplayRole), Qt.DisplayRole)
 
-
     def validate_input(self, text: str) -> bool:
         """
         Validates if the input text is a valid string (e.g., not empty).
         Customize this method for more specific string validation rules.
         """
-        return isinstance(text, str) and text.strip() != "" # Example: Not empty string
+        return isinstance(text, str) and text.strip() != ""  # Example: Not empty string
 
 
 class CellDataTypeDelegate(QStyledItemDelegate):
@@ -379,7 +386,6 @@ class ComboBoxEditorOrder(QStyledItemDelegate):
         except Exception as e:
             print(f"Error showing popup: {e}")
 
-
     def setEditorData(self, editor, index):
         value = index.data(Qt.DisplayRole)
         editor.setCurrentText(value)  #
@@ -430,45 +436,74 @@ class ComboBoxWithAddDelegate(QStyledItemDelegate):
     def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem',
                      index: QtCore.QModelIndex) -> typing.Optional[QWidget]:
 
-        col = index.column()
-        column_name = index.model().headerData(col, Qt.Horizontal)
-        current_text = index.data(Qt.DisplayRole)
-        editor = ComboBoxWithAdd(parent=parent , column_name=column_name )
-        editor.setEditable(False)  # Optional: Disable manual text entry
-        editor.clear()
-        if column_name == "كوبون الخصم":
-            coupons = Coupon.get_all()
-            if coupons and len(coupons) > 0 :
-                for coupon in coupons:
-                    editor.add_item(coupon.code, decimal.Decimal(coupon.discount))
+        try:
 
-            editor.addItem(editor.add_item_text)
-            editor.add_delegate_index()
 
-        elif column_name == "وسيلة الدفع":
-            payments  = Payment.get_all()
-            if payments and len(payments) > 0 :
-                for payment  in payments:
-                    editor.add_item(payment.name, decimal.Decimal(payment.percentage))
+
+            col = index.column()
+            column_name = index.model().headerData(col, Qt.Horizontal)
+            current_text = index.data(Qt.DisplayRole)
+            editor = ComboBoxWithAdd(parent=parent, column_name=column_name)
+            editor.setEditable(False)  # Optional: Disable manual text entry
+            editor.clear()
+
+            if column_name == "كوبون الخصم":
+
+                # editor.addItem("Loading..")
+
+
+                coupons = Coupon.get_all(
+                )
+                coupons.finished.connect(self.addEditorItems)
+
+
+            elif column_name == "وسيلة الدفع":
+                payments = Payment.get_all()
+                payments.finished.connect(self.addEditorItems)
+
+
+
+            elif column_name == "شركة الشحن":
+                shippings = ShippingCompany.get_all()
+                shippings.finished.connect(self.addEditorItems)
+
+
+
+            else:
+                raise Exception(f"There's no column named {column_name}")
 
             editor.addItem(editor.add_item_text)
             editor.add_delegate_index()
             editor.update()
-        elif column_name == "شركة الشحن":
-            shippings = ShippingCompany.get_all()
-            if shippings and len(shippings) > 0:
-                for shipping in shippings:
-                    editor.add_item(shipping.name  , shipping.percentage )
+            if current_text != editor.add_item_text:
+                if current_text:
+                    editor.setCurrentText(current_text)
+            return editor
 
-            editor.addItem(editor.add_item_text)
-            editor.add_delegate_index()
-        else :
-            raise Exception(f"There's no column named {column_name}")
 
-        if current_text != editor.add_item_text:
-            if current_text:
-                editor.setCurrentText(current_text)
-        return editor
+        except Exception as e:
+            logger.error(e, exc_info=True)
+    def addEditorItems(self , result = None , error= None  ):
+
+        loading_item_index = self._active_editor.findText("Loading..")
+
+        # self._active_editor.removeItem(loading_item_index)
+        if result and len(result) > 0 :
+
+            for item in result:
+                if isinstance(item  , Coupon ) :
+                    self._active_editor.add_item(item.code, decimal.Decimal(item.discount))
+                elif isinstance(item , Payment ) :
+                    self._active_editor.add_item(item.name, decimal.Decimal(item.percentage))
+                elif  isinstance(item , ShippingCompany ) :
+                    self._active_editor.add_item(item.name, decimal.Decimal(item.percentage))
+                else :
+                    raise  Exception("item error")
+
+
+            self._active_editor.add_delegate_index()
+            self._active_editor.update()
+            self._active_editor.view().update()
 
 
 

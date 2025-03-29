@@ -45,10 +45,12 @@ class FreeLancerWindowController:
         if id_data == -1 and   len(str(other_costs)) > 0 :
             print("add new company")
             freelancer_id = FreeLancer.add(
-                other_costs=str(other_costs), amount=amount, note=str(note), date=date
+                other_costs=str(other_costs), amount=amount, note=str(note), date=date ,
+            callback = lambda  result , error : self.set_item_id( result , error  , row )
+
             )
-            item = self.view.table_widget.item(row, 0)
-            item.setData(Qt.UserRole, freelancer_id)
+
+
         elif id_data != -1:
             print("update company")
             FreeLancer.update(
@@ -60,6 +62,14 @@ class FreeLancerWindowController:
                     "date": date,
                 }
             )
+
+    def set_item_id(self, result, error, row):
+        if error :
+            raise  error
+
+        item = self.view.table_widget.item(row, 0)
+        item.setData(Qt.UserRole, result.id )
+        item.setData(Qt.DisplayRole, result.id )
 
     def update_field_value(self):
         pass

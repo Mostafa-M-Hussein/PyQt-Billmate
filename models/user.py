@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Column, DateTime, select, Enum as SqlEnum
+from sqlalchemy import String, Integer, Column, DateTime, select, Enum as SqlEnum , Index
 from sqlalchemy.sql import func, and_
 
 from models import Base, run_in_thread
@@ -18,6 +18,11 @@ class User(Base, DynamicSearch):
     updated_at = Column(DateTime, onupdate=func.now())
     created_at = Column(DateTime, default=func.now())
 
+    __table_args__ = (
+        Index('idx_user_name', 'name'),
+        Index('idx_user_password', 'password'),
+        Index('idx_user_role', 'role'),
+    )
     @run_in_thread
     @staticmethod
     def get(session, name: str):

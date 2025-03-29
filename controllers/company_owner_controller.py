@@ -118,11 +118,13 @@ class CompanyOwnerController(BaseController):
                 payment_percentage=payment_percentage,
                 cost=cost,
                 total_profit=db_values.get('total_gross_profit', Decimal(0)),
-                total_discount=db_values.get('total_discount', Decimal(0))
+                total_discount=db_values.get('total_discount', Decimal(0)) ,
+            callback = lambda  result , error : self.set_item_id( result , error  , row )
+
 
             )
-            item = self.view.table_widget.item(row, 0)
-            item.setData(Qt.UserRole, company_id)
+
+
         elif id_data != - 1:
             update_dict = {
                 "id": id_data,
@@ -169,6 +171,13 @@ class CompanyOwnerController(BaseController):
             CompanyOwner.update(
                 updated=update_dict
             )
+
+    def set_item_id(self , result , error  , row ):
+        if error :
+            raise  error
+        item = self.view.table_widget.item(row, 0)
+        item.setData(Qt.UserRole, result.id )
+        item.setData(Qt.DisplayRole, result.id )
 
     def update_field_value(self, row, changed_column=None):
         def get_numeric_data(item):
