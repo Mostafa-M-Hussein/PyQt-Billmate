@@ -275,7 +275,7 @@ class TextEditWidget(QWidget):
             db = self.current_model_object.search_with_relations(
                 filters=filters[selected_item])
         else:
-            db = self.current_model_object.search(selected_item, searched_value)
+            db = self.current_model_object.search(column=selected_item, value = searched_value)
             print(db)
         if len(db) > 0 and db not in self.rows:
             self.rows.extend(db)
@@ -309,10 +309,13 @@ class TextEditWidget(QWidget):
             self.removeDatabaseRows()
 
     def back_button_action(self):
-        rows = self.current_model_object.get_all()
         self.table_widget.setDefaultSettings()
-        table_items = self.create_table_items(rows)
-        self.table_widget.add_rows(table_items)
+        self.table_widget.parent.update_table_data()
+
+
+        # rows = self.current_model_object.get_all()
+        # table_items = self.create_table_items(rows)
+        # self.table_widget.add_rows(table_items)
         self.search_btn.setText("Search")
         self.search_btn.setIcon(QIcon(":icons/icons/search.png"))
 

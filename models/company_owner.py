@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, selectinload, joinedload
 from sqlalchemy.sql import func
 
-from models import Base, get_session, run_in_thread
+from models import Base, get_session, run_in_thread, run_in_thread_search
 from models.constant import PaymentStatus, OrderStatus
 from utils.logger.logger import setup_logger
 
@@ -628,11 +628,12 @@ class CompanyOwner(Base, DynamicSearch):
             session.rollback()
             logger.error(e, exc_info=True)
 
-    def search(self, column, value, operator="eq", **kwargs):
-        print(type(self))
-        result = self.where(column, value,  operator=operator, **kwargs)
+    @run_in_thread_search
+    def search(self, session, column, value):
+        print("type is ==>", type(session), type(column))
+        result = self.where(column, value, session)
         if len(result) == 0:
-            result = self.where(column, value,  operator=operator, **kwargs)
+            result = self.where(column, value, session)
         return result
 
 
@@ -805,9 +806,10 @@ class Company(Base, DynamicSearch):
             session.rollback()
             logger.error(e, exc_info=True)
 
-    @run_in_thread
-    def search(self, session, column, value, operator="eq"):
-        result = self.where(column, value, session, operator=operator)
+    @run_in_thread_search
+    def search(self  ,    session  , column, value):
+        print( "type is ==>", type(session) , type(column))
+        result = self.where(column, value, session)
         if len(result) == 0:
-            result = self.where(column, value, session, operator=operator)
+            result = self.where(column, value, session)
         return result

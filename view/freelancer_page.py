@@ -44,6 +44,7 @@ class FreeLancerWindow(BaseView , SingletonMixin):
         self.table_widget.add_rows()
         self.table_widget.update()
 
+
     def _create_waiting_spinner(self):
         self.spinner_widget = QWidget()
         # self.spinner_widget.setStyleSheet("background-color : red")

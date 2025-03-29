@@ -4,7 +4,7 @@ import decimal
 from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select
 from sqlalchemy.sql import func
 
-from models import Base, run_in_thread
+from models import Base, run_in_thread, run_in_thread_search
 from models.alchemy import DynamicSearch
 from utils.logger.logger import setup_logger
 
@@ -114,9 +114,10 @@ class FreeLancer(Base, DynamicSearch):
             session.rollback()
             logger.error(e, exc_info=True)
 
-    @run_in_thread
-    def search(self, session, column, value, operator="eq", **kwargs):
-        result = self.where(column, value, session, operator=operator, **kwargs)
+    @run_in_thread_search
+    def search(self, session, column, value):
+        print("type is ==>", type(session), type(column))
+        result = self.where(column, value, session)
         if len(result) == 0:
-            result = self.where(column, value, session, operator=operator, **kwargs)
+            result = self.where(column, value, session)
         return result

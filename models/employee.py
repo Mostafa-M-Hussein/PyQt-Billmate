@@ -14,7 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 
-from models import Base, run_in_thread
+from models import Base, run_in_thread, run_in_thread_search
 from models.alchemy import DynamicSearch
 from models.constant import PaymentStatus
 from utils.logger.logger import setup_logger
@@ -166,12 +166,12 @@ class Employee(Base, DynamicSearch):
             session.rollback()
             logger.error(e, exc_info=True)
 
-    @run_in_thread
-    def search(self, o , session , column, value, operator="eq",  *args , **kwargs):
-        print(type(session) , type(column))
-        result = self.where(column, value, session, operator=operator ,   *args ,  **kwargs)
+    @run_in_thread_search
+    def search(self  ,    session  , column, value):
+        print( "type is ==>", type(session) , type(column))
+        result = self.where(column, value, session)
         if len(result) == 0:
-            result = self.where(column, value, session, operator=operator,  *args , **kwargs)
+            result = self.where(column, value, session)
         return result
 
 # Employee.search("name" , "")
