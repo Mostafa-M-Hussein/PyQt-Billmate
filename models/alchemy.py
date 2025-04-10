@@ -1,7 +1,7 @@
 import datetime
 import decimal
 from typing import List, Any, Optional
-from sqlalchemy import or_, and_, desc , select
+from sqlalchemy import or_, and_, desc, select
 from sqlalchemy.orm import selectinload
 from models import get_session, run_in_thread
 
@@ -32,7 +32,7 @@ def get_columns_name(model: object):
             "loan_amount",
             "date_of_debt",
             "paid_amounts",
-            "rem_amounts"  ,
+            "rem_amounts",
             "note",
             "monthly_payment_due_date",
         ]
@@ -46,7 +46,7 @@ def get_columns_name(model: object):
             "payment_status",
             "total_profit_from_order",
             "total_discount",
-            "retrieved_order" ,
+            "retrieved_order",
             "coupon_code",
             "payment_method",
             "total_demand",
@@ -97,15 +97,15 @@ class DynamicSearch:
 
     @classmethod
     def where(
-            cls,
-            column: str,
-            value: Any,
-            session,
-            operator: str = "eq",
-            order_by: str = "created_at",
-            order_direction: str = "desc",
-            limit: Optional[int] = None,
-            **kwargs
+        cls,
+        column: str,
+        value: Any,
+        session,
+        operator: str = "eq",
+        order_by: str = "created_at",
+        order_direction: str = "desc",
+        limit: Optional[int] = None,
+        **kwargs,
     ) -> List[Any]:
         """
         Enhanced search method with support for different operators and ordering.
@@ -124,7 +124,7 @@ class DynamicSearch:
             List of matching records
         """
 
-        print("xxxx=>" , kwargs)
+        print("xxxx=>", kwargs)
 
         try:
             # Get column attribute safely
@@ -145,7 +145,7 @@ class DynamicSearch:
             query = query.filter(filter_expr)
 
             # Apply ordering
-            if order_direction.lower() == 'desc':
+            if order_direction.lower() == "desc":
                 query = query.order_by(desc(order_column))
             else:
                 query = query.order_by(order_column)
@@ -164,12 +164,7 @@ class DynamicSearch:
             raise Exception(f"Search error in {cls.__name__}: {str(e)}")
 
     @staticmethod
-    def _build_filter(
-            column_attr,
-            value: Any,
-            operator: str,
-            **kwargs
-    ):
+    def _build_filter(column_attr, value: Any, operator: str, **kwargs):
         """
         Build filter expression based on operator
 
@@ -185,46 +180,54 @@ class DynamicSearch:
         operator = operator.lower()
 
         # Standard comparison operators
-        if operator == 'eq':
+        if operator == "eq":
             return column_attr == value
-        elif operator == 'neq':
+        elif operator == "neq":
             return column_attr != value
-        elif operator == 'like':
+        elif operator == "like":
             return column_attr.like(f"%{value}%")
-        elif operator == 'ilike':
+        elif operator == "ilike":
             return column_attr.ilike(f"%{value}%")
-        elif operator == 'in':
-            return column_attr.in_(value if isinstance(value, (list, tuple)) else [value])
-        elif operator == 'gt':
+        elif operator == "in":
+            return column_attr.in_(
+                value if isinstance(value, (list, tuple)) else [value]
+            )
+        elif operator == "gt":
             return column_attr > value
-        elif operator == 'gte':
+        elif operator == "gte":
             return column_attr >= value
-        elif operator == 'lt':
+        elif operator == "lt":
             return column_attr < value
-        elif operator == 'lte':
+        elif operator == "lte":
             return column_attr <= value
 
         # Between operator with enhanced date range support
-        elif operator == 'between':
+        elif operator == "between":
             # Validate between requires start and end values
-            if 'start' not in kwargs or 'end' not in kwargs:
-                raise ValueError("'between' operator requires 'start' and 'end' arguments")
+            if "start" not in kwargs or "end" not in kwargs:
+                raise ValueError(
+                    "'between' operator requires 'start' and 'end' arguments"
+                )
 
-            start = kwargs.get('start')
-            end = kwargs.get('end')
+            start = kwargs.get("start")
+            end = kwargs.get("end")
 
             # Handle different input types
-            if isinstance(start, (datetime.date, datetime.datetime)) and isinstance(end, (datetime.date, datetime.datetime)):
+            if isinstance(start, (datetime.date, datetime.datetime)) and isinstance(
+                end, (datetime.date, datetime.datetime)
+            ):
                 # Date/datetime range
                 return column_attr.between(start, end)
             elif isinstance(start, (int, float)) and isinstance(end, (int, float)):
                 # Numeric range
                 return column_attr.between(start, end)
             else:
-                raise ValueError("Invalid types for 'between' operator. Must be date, datetime, int, or float.")
+                raise ValueError(
+                    "Invalid types for 'between' operator. Must be date, datetime, int, or float."
+                )
 
         # Complex search with multiple conditions
-        elif operator == 'or':
+        elif operator == "or":
             if not isinstance(value, list):
                 raise ValueError("'or' operator requires a list of values")
 
@@ -246,16 +249,16 @@ class DynamicSearch:
             List of matching objects with a session that must be closed
         """
         # Create a new session that will stay open
-        with  get_session() as session :
+        with get_session() as session:
             try:
                 # Start with the base query
                 query = select(self.__class__)
 
                 # Process filters and add joins as needed
                 for filter_key, value in filters.items():
-                    if '.' in filter_key:
+                    if "." in filter_key:
                         # This is a related model filter
-                        relation_name, column_name = filter_key.split('.')
+                        relation_name, column_name = filter_key.split(".")
 
                         # Add the join if it's a relationship
                         if hasattr(self.__class__, relation_name):
@@ -275,8 +278,9 @@ class DynamicSearch:
 
                 # Get all relationship attributes for this class
                 mapper = self.__class__.__mapper__
-                relationship_properties = [p.key for p in mapper.iterate_properties
-                                           if hasattr(p, 'direction')]
+                relationship_properties = [
+                    p.key for p in mapper.iterate_properties if hasattr(p, "direction")
+                ]
 
                 # Add eager loading options for ALL relationships
                 for rel_name in relationship_properties:
@@ -291,18 +295,18 @@ class DynamicSearch:
                 return items
             except Exception as e:
                 session.close()
-                print(f"Error in search_with_relations: {e}" )
+                print(f"Error in search_with_relations: {e}")
                 return []
 
     @classmethod
     def search(
-            cls,
-            session,
-            filters: List[dict],
-            combine_with: str = 'and',
-            order_by: str = 'created_at',
-            order_direction: str = 'desc',
-            limit: Optional[int] = None
+        cls,
+        session,
+        filters: List[dict],
+        combine_with: str = "and",
+        order_by: str = "created_at",
+        order_direction: str = "desc",
+        limit: Optional[int] = None,
     ) -> List[Any]:
         """
         Advanced search with multiple filters.
@@ -322,16 +326,14 @@ class DynamicSearch:
             # Build filter expressions
             filter_expressions = []
             for filter_dict in filters:
-                column = getattr(cls, filter_dict['column'])
+                column = getattr(cls, filter_dict["column"])
                 filter_expr = cls._build_filter(
-                    column,
-                    filter_dict['value'],
-                    filter_dict.get('operator', 'eq')
+                    column, filter_dict["value"], filter_dict.get("operator", "eq")
                 )
                 filter_expressions.append(filter_expr)
 
             # Combine filters
-            if combine_with.lower() == 'or':
+            if combine_with.lower() == "or":
                 combined_filter = or_(*filter_expressions)
             else:
                 combined_filter = and_(*filter_expressions)
@@ -342,7 +344,7 @@ class DynamicSearch:
 
             # Apply ordering
             order_column = getattr(cls, order_by)
-            if order_direction.lower() == 'desc':
+            if order_direction.lower() == "desc":
                 query = query.order_by(desc(order_column))
             else:
                 query = query.order_by(order_column)

@@ -13,7 +13,10 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QGridLayout,
     QComboBox,
-    QMessageBox, QTableWidgetItem, QVBoxLayout, )
+    QMessageBox,
+    QTableWidgetItem,
+    QVBoxLayout,
+)
 from fuzzywuzzy.fuzz import partial_ratio
 
 from models.alchemy import get_columns_name
@@ -105,9 +108,7 @@ class TextEditWidget(QWidget):
         # self.plainText.textChanged.connect(self.on_text_changed)
         self.plainText.setLocale(QLocale(QLocale.Language.Arabic))
         self.plainText.setMinimumWidth(250)
-        self.plainText.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding
-        )
+        self.plainText.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.plainText.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.search_btn = QPushButton("Search")
@@ -122,32 +123,37 @@ class TextEditWidget(QWidget):
         self.search_container_layout = QGridLayout()
         self.search_container.setLayout(self.search_container_layout)
         self.search_container_layout.addWidget(self.plainText, 0, 0)
-        self.search_container_layout.addWidget(self.search_btn, 0, 0, Qt.AlignVCenter | Qt.AlignBottom)
+        self.search_container_layout.addWidget(
+            self.search_btn, 0, 0, Qt.AlignVCenter | Qt.AlignBottom
+        )
         # self.search_container_layout.setRowStretch(0, 10)
         # self.search_container_layout.setColumnStretch(0, 10)
         # self.combobox.setFixedSize(50 , 50 )
 
         exculded_columns = [
-            'total_profit',
-            'total_discount',
-            'total_demand',
-            'salla_total',
-            'cost',
-            'amount',
-            'salary',
-            'loan_from_salary',
-            'amount_paid',
-            'rem_from_salary',
-            'amount_settled',
-            'loan_amount',
-            'paid_amounts',
-            'retrieved_order',
-            'rem_amounts',
-
+            "total_profit",
+            "total_discount",
+            "total_demand",
+            "salla_total",
+            "cost",
+            "amount",
+            "salary",
+            "loan_from_salary",
+            "amount_paid",
+            "rem_from_salary",
+            "amount_settled",
+            "loan_amount",
+            "paid_amounts",
+            "retrieved_order",
+            "rem_amounts",
         ]
         self.headers_display = self.widget.get_column_headers()[1:]
         self.headers_user = self.widget.get_column_headers(Qt.UserRole)
-        removed_index = [self.headers_user.index(i) for i in self.headers_user if i in exculded_columns]
+        removed_index = [
+            self.headers_user.index(i)
+            for i in self.headers_user
+            if i in exculded_columns
+        ]
         headers_user_copy = self.headers_user.copy()
         headers_user_display_copy = self.headers_display.copy()
         for i in removed_index:
@@ -175,7 +181,7 @@ class TextEditWidget(QWidget):
             self.search_btn.setIcon(QIcon(":icons/icons/search.png"))
 
     def createCalendar(self):
-        if not hasattr(self, 'calendar'):
+        if not hasattr(self, "calendar"):
             self.calendar = RangeCalendar()
             self.calendar.range_selected.connect(self.getSelectedDate)
 
@@ -187,11 +193,14 @@ class TextEditWidget(QWidget):
     def getSelectedDate(self):
         # This slot is triggered when the date selection changes
         start_date, end_date = self.calendar.getCurrentDate()
-        if hasattr(self, 'selected_item') and self.selected_item:
-            self.rows = self.current_model_object.search(column=self.selected_item,
-                                                         start=start_date,
-                                                         end=end_date ,
-                                                         value=None , operator='between')
+        if hasattr(self, "selected_item") and self.selected_item:
+            self.rows = self.current_model_object.search(
+                column=self.selected_item,
+                start=start_date,
+                end=end_date,
+                value=None,
+                operator="between",
+            )
             self.updateTable()
             self.search_btn.setText("Back")
             del self.selected_item
@@ -218,7 +227,7 @@ class TextEditWidget(QWidget):
                     )
 
                 if selected_item is not None and selected_item in get_columns_name(
-                        self.current_model_object
+                    self.current_model_object
                 ):
                     searched_text = splitted_text.copy()
                     for searched_value in splitted_text:
@@ -246,7 +255,9 @@ class TextEditWidget(QWidget):
                         except:
                             pass
 
-                        self.updateDatabaseRows(selected_item, searched_value, searched_text)
+                        self.updateDatabaseRows(
+                            selected_item, searched_value, searched_text
+                        )
                     self.updateTable()
 
                 else:
@@ -266,16 +277,25 @@ class TextEditWidget(QWidget):
         self.rows.clear()
 
     def updateDatabaseRows(self, selected_item, searched_value, searched_text):
-        if selected_item in ["coupon_code", "payment_method", "shipping_company", 'shipping_id']:
-            filters = {"coupon_code": {'coupons.code': searched_value},
-                       "shipping_company": {"shippings.name": searched_value},
-                       "payment_method": {"payments.name": searched_value},
-                       "shipping_id": {"shippings.name": searched_value}
-                       }
+        if selected_item in [
+            "coupon_code",
+            "payment_method",
+            "shipping_company",
+            "shipping_id",
+        ]:
+            filters = {
+                "coupon_code": {"coupons.code": searched_value},
+                "shipping_company": {"shippings.name": searched_value},
+                "payment_method": {"payments.name": searched_value},
+                "shipping_id": {"shippings.name": searched_value},
+            }
             db = self.current_model_object.search_with_relations(
-                filters=filters[selected_item])
+                filters=filters[selected_item]
+            )
         else:
-            db = self.current_model_object.search(column=selected_item, value = searched_value)
+            db = self.current_model_object.search(
+                column=selected_item, value=searched_value
+            )
             print(db)
         if len(db) > 0 and db not in self.rows:
             self.rows.extend(db)
@@ -289,7 +309,7 @@ class TextEditWidget(QWidget):
             except:
                 searched_text.pop(0)
 
-        self.plainText.setPlainText('\n'.join(searched_text))
+        self.plainText.setPlainText("\n".join(searched_text))
         if len(self.rows) == 0:
             QMessageBox.warning(self, "Error", f"there's  no item founded..")
             return False
@@ -300,8 +320,10 @@ class TextEditWidget(QWidget):
             table_items = self.create_table_items(self.rows)
             self.table_widget.add_rows(table_items)
             print(table_items)
-            if isinstance(self.current_model_object,
-                          CompanyOwner) and self.combobox.currentText() == "رقم الطلب مع التحديث":
+            if (
+                isinstance(self.current_model_object, CompanyOwner)
+                and self.combobox.currentText() == "رقم الطلب مع التحديث"
+            ):
                 print("update the status order ")
                 self.table_widget.update_column_status(3)
             self.search_btn.setText("Back")
@@ -311,7 +333,6 @@ class TextEditWidget(QWidget):
     def back_button_action(self):
         self.table_widget.setDefaultSettings()
         self.table_widget.parent.update_table_data()
-
 
         # rows = self.current_model_object.get_all()
         # table_items = self.create_table_items(rows)
@@ -340,13 +361,17 @@ class TextEditWidget(QWidget):
             rem_from_salary = self.create_table_item(
                 str(rem_from_salary_cal), rem_from_salary_cal
             )
-            amount_settled = self.create_table_item(str(row.amount_settled), row.amount_settled)
-            amount_paid_res = self.controller.calculate_amount_paid(row.amount_settled, row.loan_from_salary)
-            amount_paid = self.create_table_item(
-                str(amount_paid_res), amount_paid_res
+            amount_settled = self.create_table_item(
+                str(row.amount_settled), row.amount_settled
             )
+            amount_paid_res = self.controller.calculate_amount_paid(
+                row.amount_settled, row.loan_from_salary
+            )
+            amount_paid = self.create_table_item(str(amount_paid_res), amount_paid_res)
             loan_date = self.create_table_item(str(row.loan_date), row.loan_date)
-            payment_date = self.create_table_item(str(row.payment_date), row.payment_date)
+            payment_date = self.create_table_item(
+                str(row.payment_date), row.payment_date
+            )
             return [
                 emp_id,
                 name,
@@ -363,9 +388,13 @@ class TextEditWidget(QWidget):
             coupon_code = str(row.coupons.code) if row.coupons is not None else ""
             coupon_discount = row.coupons.discount if row.coupons is not None else 0
             shipping_name = str(row.shippings.name) if row.shippings is not None else ""
-            shipping_percentage = row.shippings.percentage if row.shippings is not None else 0
+            shipping_percentage = (
+                row.shippings.percentage if row.shippings is not None else 0
+            )
             payment_method = str(row.payments.name) if row.payments is not None else ""
-            payment_percentage = row.payments.percentage if row.payments is not None else 0
+            payment_percentage = (
+                row.payments.percentage if row.payments is not None else 0
+            )
             return [
                 self.create_table_item(str(row.id), row.id),
                 self.create_table_item(str(row.payment_date), row.payment_date),
@@ -378,7 +407,9 @@ class TextEditWidget(QWidget):
                 self.create_table_item(str(row.total_profit), row.total_profit),
                 self.create_table_item(coupon_code, coupon_discount),
                 self.create_table_item(payment_method, payment_percentage),
-                self.create_table_item(str(row.total_demand), row.total_demand if row.total_demand else 0),
+                self.create_table_item(
+                    str(row.total_demand), row.total_demand if row.total_demand else 0
+                ),
                 self.create_table_item(shipping_name, shipping_percentage),
                 self.create_table_item(str(row.salla_total), row.salla_total),
                 self.create_table_item(str(row.cost), row.cost),
@@ -390,17 +421,21 @@ class TextEditWidget(QWidget):
             ]
         elif isinstance(self.current_model_object, Company):
             shipping_name = str(row.shippings.name) if row.shippings is not None else ""
-            shipping_percentage = row.shippings.percentage if row.shippings is not None else 0
+            shipping_percentage = (
+                row.shippings.percentage if row.shippings is not None else 0
+            )
             return [
                 self.create_table_item(str(row.id), row.id),
                 self.create_table_item(shipping_name, shipping_percentage),
                 self.create_table_item(str(row.loan_amount), Decimal(row.loan_amount)),
                 self.create_table_item(str(row.date_of_debt), row.date_of_debt),
                 self.create_table_item(
-                    str(row.paid_amounts), row.paid_amounts if Decimal(row.paid_amounts) else 0
+                    str(row.paid_amounts),
+                    row.paid_amounts if Decimal(row.paid_amounts) else 0,
                 ),
                 self.create_table_item(
-                    str(row.rem_amounts), Decimal(row.rem_amounts) if row.rem_amounts else 0
+                    str(row.rem_amounts),
+                    Decimal(row.rem_amounts) if row.rem_amounts else 0,
                 ),
                 self.create_table_item(str(row.note), row.note),
                 self.create_table_item(

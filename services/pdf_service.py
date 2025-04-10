@@ -23,7 +23,7 @@ class PrintThread(QThread):
             splash_screen.showMessage(
                 "Preparing document for printing....",
                 Qt.AlignBottom | Qt.AlignCenter,
-                Qt.black
+                Qt.black,
             )
             splash_screen.show()
             # QApplication.processEvents()

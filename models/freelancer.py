@@ -1,7 +1,7 @@
 import datetime
 import decimal
 
-from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select , Index
+from sqlalchemy import String, Integer, Column, DECIMAL, DateTime, Date, select, Index
 from sqlalchemy.sql import func
 
 from models import Base, run_in_thread, run_in_thread_search
@@ -22,15 +22,15 @@ class FreeLancer(Base, DynamicSearch):
     created_at = Column(DateTime, default=func.now())
 
     __table_args__ = (
-        Index('idx_freelancer_name', 'note'),
-        Index('idx_freelancer_payment_amount', 'amount'),
-        Index('idx_freelancer_other_costs', 'other_costs'),
-        Index('idx_freelancer_date', 'date'),
+        Index("idx_freelancer_name", "note"),
+        Index("idx_freelancer_payment_amount", "amount"),
+        Index("idx_freelancer_other_costs", "other_costs"),
+        Index("idx_freelancer_date", "date"),
     )
 
     @run_in_thread
     @staticmethod
-    def get(session , id: str):
+    def get(session, id: str):
 
         try:
             stmt = select(FreeLancer).where(FreeLancer.id == id)
@@ -44,12 +44,13 @@ class FreeLancer(Base, DynamicSearch):
 
     @run_in_thread
     @staticmethod
-    def add(session,
-            note: str,
-            amount: decimal.Decimal,
-            other_costs: str,
-            date: datetime.date = None,
-            ):
+    def add(
+        session,
+        note: str,
+        amount: decimal.Decimal,
+        other_costs: str,
+        date: datetime.date = None,
+    ):
         try:
             employee = FreeLancer(
                 note=note, amount=amount, other_costs=other_costs, date=date
@@ -108,7 +109,7 @@ class FreeLancer(Base, DynamicSearch):
 
     @run_in_thread
     @staticmethod
-    def remove(session, o ,  id: str):
+    def remove(session, o, id: str):
 
         try:
             stmt = select(FreeLancer).where(FreeLancer.id == id)

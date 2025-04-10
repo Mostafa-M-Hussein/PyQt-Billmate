@@ -12,10 +12,11 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QSplitter, QStackedWidget,
+    QSplitter,
+    QStackedWidget,
 )
 
-from models.company_owner import  Company
+from models.company_owner import Company
 from utils.logger.logger import setup_logger
 from models.employee import Employee
 from utils.helpers import resource_path, find_widget, load_stylesheet_from_resource
@@ -28,7 +29,8 @@ from view.widgets.table_widget import TableWidget, DelegatesType
 from view.widgets.text_edit_widget import TextEditWidget
 from pyqtspinner import WaitingSpinner
 
-class CompanyWindow(BaseView , SingletonMixin ):
+
+class CompanyWindow(BaseView, SingletonMixin):
 
     def __init__(self, widget: QWidget, controller):
         self.table_widget = None
@@ -40,13 +42,11 @@ class CompanyWindow(BaseView , SingletonMixin ):
     def initUi(self):
         self.setup_table_widget()
 
-
-
     def update_items(self, result=None, error=None):
         print(len(result))
         if error:
             raise Exception("Error in Employee get_all function..")
-        if len(result) >=  0 :
+        if len(result) >= 0:
             self.switch_window("table")
         rows = self.create_table_item_widgets(result)
         self.table_widget.setRowItems(rows)
@@ -58,10 +58,12 @@ class CompanyWindow(BaseView , SingletonMixin ):
         # self.spinner_widget.setStyleSheet("background-color : red")
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.spinner_widget)
-        self.spinner = WaitingSpinner(self.spinner_widget, color=QColor(105, 15, 117),
-                                      disable_parent_when_spinning=False)
+        self.spinner = WaitingSpinner(
+            self.spinner_widget,
+            color=QColor(105, 15, 117),
+            disable_parent_when_spinning=False,
+        )
         self.spinner.start()
-
 
     def _setup_stack_widget(self):
         self.stack_widget = QStackedWidget()
@@ -78,7 +80,6 @@ class CompanyWindow(BaseView , SingletonMixin ):
         elif window == "table":
             self.stack_widget.setCurrentWidget(self.table_widget)
 
-
     def get_column_headers(self, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
             return [
@@ -87,7 +88,7 @@ class CompanyWindow(BaseView , SingletonMixin ):
                 "مبالغ المديونية",
                 "تاريخ المديونية",
                 "مبالغ مسددة",
-                "المتبقي" ,
+                "المتبقي",
                 "ملاحظة",
                 "تاريخ السداد الشهري",
             ]
@@ -97,7 +98,7 @@ class CompanyWindow(BaseView , SingletonMixin ):
                 "loan_amount",
                 "date_of_debt",
                 "paid_amounts",
-                "rem_amounts" ,
+                "rem_amounts",
                 "note",
                 "monthly_payment_due_date",
             ]
@@ -109,18 +110,24 @@ class CompanyWindow(BaseView , SingletonMixin ):
         items = []
         for row in rows:
             row: Company
-            shipping_name   =  str(row.shippings.name) if row.shippings is not None else ""
-            shipping_percentage = row.shippings.percentage if row.shippings is not None else None
+            shipping_name = str(row.shippings.name) if row.shippings is not None else ""
+            shipping_percentage = (
+                row.shippings.percentage if row.shippings is not None else None
+            )
             item: List[QTableWidgetItem] = [
                 self.create_table_item_widget(str(row.id), row.id),
                 self.create_table_item_widget(shipping_name, shipping_percentage),
-                self.create_table_item_widget(str(row.loan_amount), Decimal(row.loan_amount)),
+                self.create_table_item_widget(
+                    str(row.loan_amount), Decimal(row.loan_amount)
+                ),
                 self.create_table_item_widget(str(row.date_of_debt), row.date_of_debt),
                 self.create_table_item_widget(
-                    str(row.paid_amounts), Decimal(row.paid_amounts) if row.paid_amounts else 0
+                    str(row.paid_amounts),
+                    Decimal(row.paid_amounts) if row.paid_amounts else 0,
                 ),
                 self.create_table_item_widget(
-                    str(row.rem_amounts), Decimal(row.rem_amounts) if row.rem_amounts else 0
+                    str(row.rem_amounts),
+                    Decimal(row.rem_amounts) if row.rem_amounts else 0,
                 ),
                 self.create_table_item_widget(str(row.note), row.note),
                 self.create_table_item_widget(
@@ -138,7 +145,7 @@ class CompanyWindow(BaseView , SingletonMixin ):
 
     def setup_table_widget(self):
         columns = self.get_column_headers()
-        self.table_widget = TableWidget(columns, self.controller , self )
+        self.table_widget = TableWidget(columns, self.controller, self)
         self.table_widget.setReadOnlyColumns([0])
         self.table_widget.add_delegate(1, DelegatesType.COMBOBOXWITHADD)
         self.table_widget.add_delegate(2, DelegatesType.NumericalDelegate)
@@ -162,6 +169,3 @@ class CompanyWindow(BaseView , SingletonMixin ):
         self.widget.setLayout(self.hbox)
 
         self.update_table_data()
-
-
-

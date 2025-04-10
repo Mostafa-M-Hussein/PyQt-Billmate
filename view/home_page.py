@@ -8,7 +8,9 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QHBoxLayout,
     QSplitter,
-    QFrame, QVBoxLayout, QStackedWidget,
+    QFrame,
+    QVBoxLayout,
+    QStackedWidget,
 )
 from pyqtspinner import WaitingSpinner
 
@@ -30,7 +32,8 @@ class MainWindow(QWidget, SingletonMixin):
 
     def __init__(self, controller=None, model=None):
         super().__init__()
-
+        self.setAttribute(Qt.WA_DeleteOnClose, False)
+        print("hello there")
         self.settings = SettingManager()
         self.controller = controller
         self.model = model
@@ -64,8 +67,11 @@ class MainWindow(QWidget, SingletonMixin):
         # self.spinner_widget.setStyleSheet("background-color : red")
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.spinner_widget)
-        self.spinner = WaitingSpinner(self.spinner_widget, color=QColor(105, 15, 117),
-                                      disable_parent_when_spinning=False)
+        self.spinner = WaitingSpinner(
+            self.spinner_widget,
+            color=QColor(105, 15, 117),
+            disable_parent_when_spinning=False,
+        )
         self.spinner.start()
 
         self.setLayout(self.vbox)
@@ -128,18 +134,22 @@ class MainWindow(QWidget, SingletonMixin):
         self.update_table_data()
 
     def setup_controllers(self):
-        role = self.settings.get_value('current_role')
-        if role and role != UserRoles.ADMIN:
-            for user_role in UserRoles:
-                if user_role != UserRoles.ADMIN and role != user_role:
-                    widget = self.tabWidget.widget(user_role.value)
-                    widget.deleteLater()
-
-        else:
-            print("user is admin..")
         self.company_tab = CompanyWindowController(self.tabWidget.widget(0))
         self.freelancer_tab = FreeLancerWindowController(self.tabWidget.widget(1))
         self.company_owner_tab = CompanyOwnerController(self.tabWidget.widget(2))
+
+    def configureWindow(self):
+        role = self.settings.get_value("current_role")
+        print("current role is ==>", role)
+        if role and isinstance(role, UserRoles):
+            if role and role != UserRoles.ADMIN:
+                for user_role in UserRoles:
+                    if user_role != UserRoles.ADMIN and role != user_role:
+                        widget = self.tabWidget.widget(user_role.value)
+                        widget.deleteLater()
+
+        else:
+            print("user is admin..")
 
     def update_table_data(self):
         return Employee.get_all(callback=self.update_items)
@@ -189,14 +199,20 @@ class MainWindow(QWidget, SingletonMixin):
             rem_from_salary = self.create_table_item_widget(
                 str(rem_from_salary_cal), rem_from_salary_cal
             )
-            amount_settled = self.create_table_item_widget(str(row.amount_settled), row.amount_settled)
-            amount_paid_res = self.controller.calculate_amount_paid(row.amount_settled, row.loan_from_salary)
+            amount_settled = self.create_table_item_widget(
+                str(row.amount_settled), row.amount_settled
+            )
+            amount_paid_res = self.controller.calculate_amount_paid(
+                row.amount_settled, row.loan_from_salary
+            )
             amount_paid = self.create_table_item_widget(
                 str(amount_paid_res), amount_paid_res
             )
 
             loan_date = self.create_table_item_widget(str(row.loan_date), row.loan_date)
-            payment_date = self.create_table_item_widget(str(row.payment_date), row.payment_date)
+            payment_date = self.create_table_item_widget(
+                str(row.payment_date), row.payment_date
+            )
             item = [
                 emp_id,
                 name,

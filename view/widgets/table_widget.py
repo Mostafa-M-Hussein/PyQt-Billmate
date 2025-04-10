@@ -10,7 +10,9 @@ from PyQt5.QtWidgets import (
     QMenu,
     QAction,
     QMessageBox,
-    QFileDialog, QApplication, )
+    QFileDialog,
+    QApplication,
+)
 
 from models.alchemy import *
 from models.company_owner import CompanyOwner, Company
@@ -25,9 +27,11 @@ from ..delegates.delegate import (
     ComboBoxEditorPayment,
     DateEditorDelegate,
     SpinBoxEditorDelegate,
-    ComboBoxEditorOrder, ComboBoxWithAddDelegate, NumericalDelegate, StringDelegate,
+    ComboBoxEditorOrder,
+    ComboBoxWithAddDelegate,
+    NumericalDelegate,
+    StringDelegate,
 )
-
 
 
 class TableWidget(QTableWidget):
@@ -106,7 +110,11 @@ class TableWidget(QTableWidget):
                 index = self.model().index(row, col)
                 if index.isValid():
                     item = self.item(row, col)
-                    self.model().setData(index, PaymentStatus.get_str(PaymentStatus.COMPLETED), Qt.DisplayRole)
+                    self.model().setData(
+                        index,
+                        PaymentStatus.get_str(PaymentStatus.COMPLETED),
+                        Qt.DisplayRole,
+                    )
                     self.model().setData(index, PaymentStatus.COMPLETED, Qt.UserRole)
 
     def calculate_column_sum(self, column: int):
@@ -119,17 +127,24 @@ class TableWidget(QTableWidget):
                     if not value or isinstance(value, str) and len(value) == 0:
                         value = 0
 
-                    elif isinstance(value, str) :
+                    elif isinstance(value, str):
                         value = decimal.Decimal(value)
 
                     if isinstance(self.methods.current_object, CompanyOwner):
                         is_order_retrieved = self.item(row, 13)
                         is_order_retrieved = is_order_retrieved.data(Qt.UserRole)
-                        if isinstance(is_order_retrieved , str ) :
-                            is_order_retrieved = OrderStatus.get_status(is_order_retrieved)
+                        if isinstance(is_order_retrieved, str):
+                            is_order_retrieved = OrderStatus.get_status(
+                                is_order_retrieved
+                            )
 
-
-                        if OrderStatus.REFUSED is  is_order_retrieved and column in [4, 5, 8 , 10 , 11 ]:
+                        if OrderStatus.REFUSED is is_order_retrieved and column in [
+                            4,
+                            5,
+                            8,
+                            10,
+                            11,
+                        ]:
                             continue
 
                     total += value
@@ -259,12 +274,12 @@ class TableWidget(QTableWidget):
                 if isinstance(delegate, NumericalDelegate):
                     self.numerical_columns.add(column)
 
-            if hasattr(self, 'sum_row_index') and self.sum_row_index is not None:
+            if hasattr(self, "sum_row_index") and self.sum_row_index is not None:
                 if 0 <= self.sum_row_index < self.rowCount():
                     self.removeRow(self.sum_row_index)
 
             self.sum_row_index = self.rowCount()
-            print("sum row index is --> " ,  self.sum_row_index)
+            print("sum row index is --> ", self.sum_row_index)
             self.insertRow(self.sum_row_index)
 
             for col in range(self.columnCount()):
@@ -272,35 +287,34 @@ class TableWidget(QTableWidget):
                 if col in self.numerical_columns:
                     sum_value = self.calculate_column_sum(col)
                     item.setData(Qt.ItemDataRole.DisplayRole, str(sum_value))
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                    item.setTextAlignment(
+                        Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+                    )
                     item.setBackground(Qt.GlobalColor.lightGray)
 
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Make read-only
+                item.setFlags(
+                    item.flags() & ~Qt.ItemFlag.ItemIsEditable
+                )  # Make read-only
                 self.setItem(self.sum_row_index, col, item)
 
         self.blockSignals(False)
 
-    def add_rows(self, rows: List[List[QTableWidgetItem]] = None ):
+    def add_rows(self, rows: List[List[QTableWidgetItem]] = None):
         self.blockSignals(True)
 
-        if hasattr(self, 'sum_row_index' ) :
+        if hasattr(self, "sum_row_index"):
             self.sum_row_index = None
 
-
-        if rows is None :
+        if rows is None:
             rows = self.getRowItems
 
-
-
-        print("rows count is-->" , len(rows))
+        print("rows count is-->", len(rows))
         # Clear existing rows
         # if self.rowCount() > 0:
         #     self.setRowCount(0)
 
-
-
         # Set row count based on input
-        self.setRowCount(len(rows)  if rows else 0)
+        self.setRowCount(len(rows) if rows else 0)
         # Iterate through rows and columns
         for r in range(self.rowCount()):
             self.last_row = r
@@ -313,13 +327,17 @@ class TableWidget(QTableWidget):
                     item = QTableWidgetItem()
 
                 # Handle read-only columns
-                if (self.read_only_columns and
-                        len(self.read_only_columns) > 0 and
-                        c in self.read_only_columns):
+                if (
+                    self.read_only_columns
+                    and len(self.read_only_columns) > 0
+                    and c in self.read_only_columns
+                ):
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
                 # Set alignment
-                item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                item.setTextAlignment(
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+                )
 
                 # Set item in table
                 self.setItem(r, c, item)
@@ -328,15 +346,11 @@ class TableWidget(QTableWidget):
             for c in range(self.columnCount()):
                 self.resizeColumnToContents(c)
 
-
         # Add sum row if needed
 
         self.add_sum_row()
 
         self.blockSignals(False)
-
-
-
 
     @property
     def read_only_columns(self):
@@ -402,14 +416,13 @@ class TableAction:
 
         item_row = item.row()
 
-
         if item_row == self.widget.sum_row_index:
             return
 
         hidden_item = self.widget.item(item_row, self.widget.hidden_column_index).text()
-        print("id is ..." , hidden_item)
+        print("id is ...", hidden_item)
         if hidden_item != "-1":
-            print("hidden item is ==>"  , hidden_item)
+            print("hidden item is ==>", hidden_item)
             self.current_object.remove(hidden_item)
 
         self.widget.removeRow(item_row)
@@ -419,13 +432,13 @@ class TableAction:
     def hide_action(self, column):
         total_columns_hides = 0
         for col in range(1, self.widget.columnCount()):
-            if self.widget.isColumnHidden(col) :
+            if self.widget.isColumnHidden(col):
                 total_columns_hides += 1
 
-
-
-        if total_columns_hides >=  self.widget.columnCount() - 2   :
-            QMessageBox.warning(self.widget , 'info' , "you cannot hide all the columns ! ")
+        if total_columns_hides >= self.widget.columnCount() - 2:
+            QMessageBox.warning(
+                self.widget, "info", "you cannot hide all the columns ! "
+            )
             return
         self.widget.hideColumn(column)
 
@@ -447,7 +460,6 @@ class TableAction:
             QMessageBox.information(self.widget, "Success", message)
         else:
             QMessageBox.warning(self.widget, "Error", message)
-
 
         if self._print_thread:
             self._print_thread.deleteLater()

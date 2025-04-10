@@ -4,36 +4,36 @@ from contextlib import contextmanager
 
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, QObject, QEventLoop, QTimer
 from PyQt5.QtWidgets import QApplication
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from utils.logger.logger import setup_logger
 
-db_url = "sqlite:///database.db"
-engine = create_engine(db_url, echo=False)
+# db_url = "sqlite:///database.db"
+# engine = create_engine(db_url, echo=False)
 
-# db_url = f"mysql+pymysql://moado:P%40$$wOrd25@203.161.56.185:3306/app_db"
-# engine = create_engine(
-#     db_url,
-#     echo=False,
-#     pool_size=10,  # Reduced from 20 - start smaller and increase if needed
-#     max_overflow=5,  # Reduced from 10
-#     pool_timeout=10,  # Reduced from 30 - fail faster
-#     pool_pre_ping=True,
-#     pool_recycle=1800,  # Reduced from 3600 - recycle connections more frequently
-#     connect_args={
-#         "connect_timeout": 10,  # Set timeout for connection attempts
-#         "read_timeout": 30,  # Set timeout for read operations
-#         "write_timeout": 30  # Set timeout for write operations
-#     }
-# )
+db_url = f"mysql+pymysql://moado:P%40$$wOrd25@203.161.56.185:3306/app_db"
+engine = create_engine(
+    db_url,
+    echo=False,
+    pool_size=10,  # Reduced from 20 - start smaller and increase if needed
+    max_overflow=5,  # Reduced from 10
+    pool_timeout=10,  # Reduced from 30 - fail faster
+    pool_pre_ping=True,
+    pool_recycle=1800,  # Reduced from 3600 - recycle connections more frequently
+    connect_args={
+        "connect_timeout": 10,  # Set timeout for connection attempts
+        "read_timeout": 30,  # Set timeout for read operations
+        "write_timeout": 30,  # Set timeout for write operations
+    },
+)
 Base = declarative_base()
 Session = sessionmaker(bind=engine, expire_on_commit=False)
 logger = setup_logger("db", "logs/db.log")
 
 
-#
 # with engine.connect() as connection:
 #     # Disable foreign key checks to allow dropping
 #     connection.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
@@ -49,25 +49,27 @@ logger = setup_logger("db", "logs/db.log")
 #     print("done")
 
 
-# def drop_and_create_database(engine):
-#     try:
-#         with engine.connect() as conn:
-#             # Switch to system database to drop and create
-#             conn.execute(text("USE mysql"))
-#
-#             # Drop database if exists
-#             conn.execute(text("DROP DATABASE IF EXISTS app_db"))
-#
-#             # Create new database
-#             conn.execute(text("CREATE DATABASE app_db"))
-#
-#             print("Database dropped and recreated successfully")
-#     except Exception as e:
-#         print(f"Error occurred: {e}")
-#
-#
-# # Execute the function
+def drop_and_create_database(engine):
+    try:
+        with engine.connect() as conn:
+            # Switch to system database to drop and create
+            conn.execute(text("USE mysql"))
+
+            # Drop database if exists
+            conn.execute(text("DROP DATABASE IF EXISTS app_db"))
+
+            # Create new database
+            conn.execute(text("CREATE DATABASE app_db"))
+
+            print("Database dropped and recreated successfully")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+
+# Execute the function
 # drop_and_create_database(engine)
+# breakpoint()
+
 
 @contextmanager
 def get_session():
@@ -86,6 +88,7 @@ class DatabaseSignals(QObject):
     """
     Signals class to handle database operation results
     """
+
     finished = pyqtSignal(object)  # Result signal
     error = pyqtSignal(Exception)  # Error signal
 
@@ -116,7 +119,7 @@ class DatabaseRunnable(QRunnable):
         self.signals = DatabaseSignals()
 
         # Extract callback if provided
-        self.callback = self.kwargs.pop('callback', None)
+        self.callback = self.kwargs.pop("callback", None)
 
     def run(self):
         """
@@ -282,6 +285,7 @@ def run_in_thread_search(func):
         return result_container[0]
 
     return wrapper
+
 
 # class DatabaseThreadManager:
 #     _instance = None

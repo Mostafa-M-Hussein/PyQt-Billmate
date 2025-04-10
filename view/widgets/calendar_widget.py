@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
 
 class CalendarWidget(QWidget):
 
-    def __init__(self, header_text: str , parent = None ):
+    def __init__(self, header_text: str, parent=None):
 
         super().__init__(parent=parent)
 

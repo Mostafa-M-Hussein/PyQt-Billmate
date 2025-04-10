@@ -11,7 +11,13 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QDateEdit,
     QStyleOptionViewItem,
-    QWidget, QLineEdit, QMessageBox, QComboBox, QTableView, QApplication, )
+    QWidget,
+    QLineEdit,
+    QMessageBox,
+    QComboBox,
+    QTableView,
+    QApplication,
+)
 
 from models.company_owner import Coupon, ShippingCompany, Payment
 from models.constant import OrderStatus
@@ -38,23 +44,33 @@ class NumericalDelegate(QStyledItemDelegate):
     Allows integers and floating-point numbers.
     """
 
-    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem', index: QModelIndex) -> \
-            typing.Optional[QWidget]:
+    def createEditor(
+        self,
+        parent: typing.Optional[QWidget],
+        option: "QStyleOptionViewItem",
+        index: QModelIndex,
+    ) -> typing.Optional[QWidget]:
         editor = QLineEdit(parent)
         # Use QDoubleValidator directly
         validator = QDoubleValidator(parent)  # For integers and floats
         editor.setValidator(validator)
         return editor
 
-    def setModelData(self, editor: QWidget, model: typing.Optional[QtCore.QAbstractItemModel],
-                     index: QModelIndex) -> None:
+    def setModelData(
+        self,
+        editor: QWidget,
+        model: typing.Optional[QtCore.QAbstractItemModel],
+        index: QModelIndex,
+    ) -> None:
         if isinstance(editor, QLineEdit):
             text = editor.text()
             if self.validate_input(text):
                 model.setData(index, text, Qt.DisplayRole)
             else:
                 # Optionally provide visual feedback or revert to previous value
-                QMessageBox.warning(editor, "Invalid Input", "Please enter a valid numerical value.")
+                QMessageBox.warning(
+                    editor, "Invalid Input", "Please enter a valid numerical value."
+                )
                 # Revert to the original data (optional - you can choose to do nothing to reject edit)
                 model.setData(index, index.data(Qt.DisplayRole), Qt.DisplayRole)
 
@@ -63,7 +79,9 @@ class NumericalDelegate(QStyledItemDelegate):
         Validates if the input text is a valid numerical value (integer or float).
         """
         try:
-            QLocale().toDouble(text)  # Still use QLocale().toDouble for parsing with locale awareness
+            QLocale().toDouble(
+                text
+            )  # Still use QLocale().toDouble for parsing with locale awareness
             return True
         except:
             return False
@@ -76,19 +94,31 @@ class StringDelegate(QStyledItemDelegate):
     You can customize `validate_input` for more specific string validation.
     """
 
-    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem', index: QModelIndex) -> \
-            typing.Optional[QWidget]:
+    def createEditor(
+        self,
+        parent: typing.Optional[QWidget],
+        option: "QStyleOptionViewItem",
+        index: QModelIndex,
+    ) -> typing.Optional[QWidget]:
         editor = QLineEdit(parent)
         return editor
 
-    def setModelData(self, editor: QWidget, model: typing.Optional[QtCore.QAbstractItemModel],
-                     index: QModelIndex) -> None:
+    def setModelData(
+        self,
+        editor: QWidget,
+        model: typing.Optional[QtCore.QAbstractItemModel],
+        index: QModelIndex,
+    ) -> None:
         if isinstance(editor, QLineEdit):
             text = editor.text()
             if self.validate_input(text):
                 model.setData(index, text, Qt.DisplayRole)
             else:
-                QMessageBox.warning(editor, "Invalid Input", "Please enter a valid text value (cannot be empty).")
+                QMessageBox.warning(
+                    editor,
+                    "Invalid Input",
+                    "Please enter a valid text value (cannot be empty).",
+                )
                 # Revert to the original data
                 model.setData(index, index.data(Qt.DisplayRole), Qt.DisplayRole)
 
@@ -103,7 +133,7 @@ class StringDelegate(QStyledItemDelegate):
 class CellDataTypeDelegate(QStyledItemDelegate):
 
     def setEditorData(
-            self, editor: typing.Optional[QWidget], index: QtCore.QModelIndex
+        self, editor: typing.Optional[QWidget], index: QtCore.QModelIndex
     ) -> None:
         value = index.data(Qt.DisplayRole)
         if value:
@@ -174,10 +204,10 @@ class TextEditDelegate(QStyledItemDelegate):
 class ComboBoxEditorPayment(QStyledItemDelegate):
 
     def paint(
-            self,
-            painter: typing.Optional[QPainter],
-            option: "QStyleOptionViewItem",
-            index: QModelIndex,
+        self,
+        painter: typing.Optional[QPainter],
+        option: "QStyleOptionViewItem",
+        index: QModelIndex,
     ) -> None:
         value = index.data(Qt.UserRole)
         if value and type(value) == str:
@@ -226,8 +256,10 @@ class ComboBoxEditorPayment(QStyledItemDelegate):
         """
         try:
             # Check if it's a left mouse button press
-            if (event.type() == event.MouseButtonPress and
-                    event.button() == Qt.LeftButton):
+            if (
+                event.type() == event.MouseButtonPress
+                and event.button() == Qt.LeftButton
+            ):
 
                 # Get the table widget
                 table = option.widget
@@ -289,10 +321,10 @@ class ComboBoxEditorPayment(QStyledItemDelegate):
 class ComboBoxEditorOrder(QStyledItemDelegate):
 
     def paint(
-            self,
-            painter: typing.Optional[QPainter],
-            option: "QStyleOptionViewItem",
-            index: QModelIndex,
+        self,
+        painter: typing.Optional[QPainter],
+        option: "QStyleOptionViewItem",
+        index: QModelIndex,
     ) -> None:
         value = index.data(Qt.UserRole)
         # print(value)
@@ -342,8 +374,10 @@ class ComboBoxEditorOrder(QStyledItemDelegate):
         """
         try:
             # Check if it's a left mouse button press
-            if (event.type() == event.MouseButtonPress and
-                    event.button() == Qt.LeftButton):
+            if (
+                event.type() == event.MouseButtonPress
+                and event.button() == Qt.LeftButton
+            ):
 
                 # Get the table widget
                 table = option.widget
@@ -433,12 +467,14 @@ class SpinBoxEditorDelegate(QStyledItemDelegate):
 
 class ComboBoxWithAddDelegate(QStyledItemDelegate):
 
-    def createEditor(self, parent: typing.Optional[QWidget], option: 'QStyleOptionViewItem',
-                     index: QtCore.QModelIndex) -> typing.Optional[QWidget]:
+    def createEditor(
+        self,
+        parent: typing.Optional[QWidget],
+        option: "QStyleOptionViewItem",
+        index: QtCore.QModelIndex,
+    ) -> typing.Optional[QWidget]:
 
         try:
-
-
 
             col = index.column()
             column_name = index.model().headerData(col, Qt.Horizontal)
@@ -451,23 +487,16 @@ class ComboBoxWithAddDelegate(QStyledItemDelegate):
 
                 # editor.addItem("Loading..")
 
-
-                coupons = Coupon.get_all(
-                )
+                coupons = Coupon.get_all()
                 coupons.finished.connect(self.addEditorItems)
-
 
             elif column_name == "وسيلة الدفع":
                 payments = Payment.get_all()
                 payments.finished.connect(self.addEditorItems)
 
-
-
             elif column_name == "شركة الشحن":
                 shippings = ShippingCompany.get_all()
                 shippings.finished.connect(self.addEditorItems)
-
-
 
             else:
                 raise Exception(f"There's no column named {column_name}")
@@ -480,32 +509,35 @@ class ComboBoxWithAddDelegate(QStyledItemDelegate):
                     editor.setCurrentText(current_text)
             return editor
 
-
         except Exception as e:
             logger.error(e, exc_info=True)
-    def addEditorItems(self , result = None , error= None  ):
+
+    def addEditorItems(self, result=None, error=None):
 
         loading_item_index = self._active_editor.findText("Loading..")
 
         # self._active_editor.removeItem(loading_item_index)
-        if result and len(result) > 0 :
+        if result and len(result) > 0:
 
             for item in result:
-                if isinstance(item  , Coupon ) :
-                    self._active_editor.add_item(item.code, decimal.Decimal(item.discount))
-                elif isinstance(item , Payment ) :
-                    self._active_editor.add_item(item.name, decimal.Decimal(item.percentage))
-                elif  isinstance(item , ShippingCompany ) :
-                    self._active_editor.add_item(item.name, decimal.Decimal(item.percentage))
-                else :
-                    raise  Exception("item error")
-
+                if isinstance(item, Coupon):
+                    self._active_editor.add_item(
+                        item.code, decimal.Decimal(item.discount)
+                    )
+                elif isinstance(item, Payment):
+                    self._active_editor.add_item(
+                        item.name, decimal.Decimal(item.percentage)
+                    )
+                elif isinstance(item, ShippingCompany):
+                    self._active_editor.add_item(
+                        item.name, decimal.Decimal(item.percentage)
+                    )
+                else:
+                    raise Exception("item error")
 
             self._active_editor.add_delegate_index()
             self._active_editor.update()
             self._active_editor.view().update()
-
-
 
     def editorEvent(self, event, model, option, index):
         """
@@ -522,8 +554,10 @@ class ComboBoxWithAddDelegate(QStyledItemDelegate):
         """
         try:
             # Check if it's a left mouse button press
-            if (event.type() == event.MouseButtonPress and
-                    event.button() == Qt.LeftButton):
+            if (
+                event.type() == event.MouseButtonPress
+                and event.button() == Qt.LeftButton
+            ):
 
                 # Get the table widget
                 table = option.widget
@@ -566,16 +600,24 @@ class ComboBoxWithAddDelegate(QStyledItemDelegate):
         except Exception as e:
             print(f"Error showing popup: {e}")
 
-    def setEditorData(self, editor: typing.Optional[QWidget], index: QtCore.QModelIndex) -> None:
+    def setEditorData(
+        self, editor: typing.Optional[QWidget], index: QtCore.QModelIndex
+    ) -> None:
         display_value = index.data(Qt.DisplayRole)
         user_value = index.data(Qt.UserRole)
         # print("setEditorData - Display Value from Index:", display_value)
         # print("setEditorData - User Value from Index:", user_value)
         if display_value:
-            editor.setCurrentText(display_value)  # Set the current text to the existing display value
+            editor.setCurrentText(
+                display_value
+            )  # Set the current text to the existing display value
 
-    def setModelData(self, editor: typing.Optional[QWidget], model: typing.Optional[QtCore.QAbstractItemModel],
-                     index: QtCore.QModelIndex) -> None:
+    def setModelData(
+        self,
+        editor: typing.Optional[QWidget],
+        model: typing.Optional[QtCore.QAbstractItemModel],
+        index: QtCore.QModelIndex,
+    ) -> None:
         """
         Saves the data from the editor widget back to the model.
         """

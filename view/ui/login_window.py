@@ -22,94 +22,110 @@ class Ui_Form(object):
         self.formLayout_2 = QtWidgets.QFormLayout()
         self.formLayout_2.setObjectName("formLayout_2")
         self.usernameLineEdit = QtWidgets.QLineEdit(Form)
-        self.usernameLineEdit.setStyleSheet("QLineEdit {\n"
-"\n"
-"    padding: 8px;\n"
-"    border: 0 ; \n"
-"    border-radius: 10px;\n"
-"    font: 15px \"Segoe UI\";\n"
-"\n"
-"   background: rgba(23, 38, 91, 0.07);\n"
-"color : black  ; \n"
-"\n"
-"}\n"
-"\n"
-"QLineEdit:hover {\n"
-"    border: 1px solid #999999;\n"
-"}\n"
-"\n"
-"QLineEdit:focus {\n"
-"    border: 1px solid gray ; \n"
-"   background: rgba(23, 38, 91, 0.09 );\n"
-"}\n"
-"\n"
-"QLineEdit:disabled {\n"
-"    background-color: #f5f5f5;\n"
-"    color: #a1a1a1;\n"
-"}")
+        self.usernameLineEdit.setStyleSheet(
+            "QLineEdit {\n"
+            "\n"
+            "    padding: 8px;\n"
+            "    border: 0 ; \n"
+            "    border-radius: 10px;\n"
+            '    font: 15px "Segoe UI";\n'
+            "\n"
+            "   background: rgba(23, 38, 91, 0.07);\n"
+            "color : black  ; \n"
+            "\n"
+            "}\n"
+            "\n"
+            "QLineEdit:hover {\n"
+            "    border: 1px solid #999999;\n"
+            "}\n"
+            "\n"
+            "QLineEdit:focus {\n"
+            "    border: 1px solid gray ; \n"
+            "   background: rgba(23, 38, 91, 0.09 );\n"
+            "}\n"
+            "\n"
+            "QLineEdit:disabled {\n"
+            "    background-color: #f5f5f5;\n"
+            "    color: #a1a1a1;\n"
+            "}"
+        )
         self.usernameLineEdit.setObjectName("usernameLineEdit")
-        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.usernameLineEdit)
+        self.formLayout_2.setWidget(
+            2, QtWidgets.QFormLayout.FieldRole, self.usernameLineEdit
+        )
         self.passwordLineEdit = QtWidgets.QLineEdit(Form)
-        self.passwordLineEdit.setStyleSheet("QLineEdit {\n"
-"\n"
-"    padding: 8px;\n"
-"    border: 0 ; \n"
-"    border-radius: 10px;\n"
-"    font: 15px \"Segoe UI\";\n"
-"\n"
-"   background: rgba(23, 38, 91, 0.07);\n"
-"color : black  ; \n"
-"\n"
-"}\n"
-"\n"
-"QLineEdit:hover {\n"
-"    border: 1px solid #999999;\n"
-"}\n"
-"\n"
-"QLineEdit:focus {\n"
-"    border: 1px solid gray ; \n"
-"   background: rgba(23, 38, 91, 0.09 );\n"
-"}\n"
-"\n"
-"QLineEdit:disabled {\n"
-"    background-color: #f5f5f5;\n"
-"    color: #a1a1a1;\n"
-"}")
+        self.passwordLineEdit.setStyleSheet(
+            "QLineEdit {\n"
+            "\n"
+            "    padding: 8px;\n"
+            "    border: 0 ; \n"
+            "    border-radius: 10px;\n"
+            '    font: 15px "Segoe UI";\n'
+            "\n"
+            "   background: rgba(23, 38, 91, 0.07);\n"
+            "color : black  ; \n"
+            "\n"
+            "}\n"
+            "\n"
+            "QLineEdit:hover {\n"
+            "    border: 1px solid #999999;\n"
+            "}\n"
+            "\n"
+            "QLineEdit:focus {\n"
+            "    border: 1px solid gray ; \n"
+            "   background: rgba(23, 38, 91, 0.09 );\n"
+            "}\n"
+            "\n"
+            "QLineEdit:disabled {\n"
+            "    background-color: #f5f5f5;\n"
+            "    color: #a1a1a1;\n"
+            "}"
+        )
         self.passwordLineEdit.setObjectName("passwordLineEdit")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.passwordLineEdit)
+        self.formLayout_2.setWidget(
+            3, QtWidgets.QFormLayout.FieldRole, self.passwordLineEdit
+        )
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_3.addItem(spacerItem)
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setMinimumSize(QtCore.QSize(250, 50))
-        self.pushButton.setStyleSheet("QPushButton \n"
-"{\n"
-"    font: 75 10pt \"MS Shell Dlg 2\";\n"
-"    font-weight : 600 ;  \n"
-"\n"
-"    background-color: #E5E5E5  ; \n"
-"    color :  black ; \n"
-"\n"
-"    border-radius : 10px  ; \n"
-"\n"
-"\n"
-"}\n"
-"\n"
-"QPushButton::pressed \n"
-"{\n"
-"\n"
-"    background-color:rgba(229,229,229 , 0.5)\n"
-"\n"
-"\n"
-"\n"
-"}")
+        self.pushButton.setStyleSheet(
+            "QPushButton \n"
+            "{\n"
+            '    font: 75 10pt "MS Shell Dlg 2";\n'
+            "    font-weight : 600 ;  \n"
+            "\n"
+            "    background-color: #E5E5E5  ; \n"
+            "    color :  black ; \n"
+            "\n"
+            "    border-radius : 10px  ; \n"
+            "\n"
+            "\n"
+            "}\n"
+            "\n"
+            "QPushButton::pressed \n"
+            "{\n"
+            "\n"
+            "    background-color:rgba(229,229,229 , 0.5)\n"
+            "\n"
+            "\n"
+            "\n"
+            "}"
+        )
         self.pushButton.setObjectName("pushButton")
         self.horizontalLayout_3.addWidget(self.pushButton)
-        self.formLayout_2.setLayout(4, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_3)
+        self.formLayout_2.setLayout(
+            4, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_3
+        )
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem1)
         self.label_3 = QtWidgets.QLabel(Form)
         self.label_3.setMaximumSize(QtCore.QSize(500, 16777215))
@@ -119,9 +135,13 @@ class Ui_Form(object):
         self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_2.addWidget(self.label_3)
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem2)
-        self.formLayout_2.setLayout(1, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2)
+        self.formLayout_2.setLayout(
+            1, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2
+        )
         self.verticalLayout.addLayout(self.formLayout_2)
 
         self.retranslateUi(Form)

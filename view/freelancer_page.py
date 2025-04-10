@@ -7,7 +7,8 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QHBoxLayout,
-    QSplitter, QStackedWidget,
+    QSplitter,
+    QStackedWidget,
 )
 
 from models.freelancer import FreeLancer
@@ -18,7 +19,8 @@ from view.widgets.table_widget import TableWidget, DelegatesType
 from view.widgets.text_edit_widget import TextEditWidget
 from pyqtspinner import WaitingSpinner
 
-class FreeLancerWindow(BaseView , SingletonMixin):
+
+class FreeLancerWindow(BaseView, SingletonMixin):
 
     def __init__(self, widget: QWidget, controller):
         self.widget = widget
@@ -44,14 +46,16 @@ class FreeLancerWindow(BaseView , SingletonMixin):
         self.table_widget.add_rows()
         self.table_widget.update()
 
-
     def _create_waiting_spinner(self):
         self.spinner_widget = QWidget()
         # self.spinner_widget.setStyleSheet("background-color : red")
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.spinner_widget)
-        self.spinner = WaitingSpinner(self.spinner_widget, color=QColor(105, 15, 117),
-                                      disable_parent_when_spinning=False)
+        self.spinner = WaitingSpinner(
+            self.spinner_widget,
+            color=QColor(105, 15, 117),
+            disable_parent_when_spinning=False,
+        )
         self.spinner.start()
 
         # self.widget.setLayout(self.vbox)
@@ -78,7 +82,7 @@ class FreeLancerWindow(BaseView , SingletonMixin):
         self.switch_window("table")
 
     def switch_window(self, window="loading"):
-        if not hasattr(self, 'stack_widget') or not hasattr(self, 'spinner_widget'):
+        if not hasattr(self, "stack_widget") or not hasattr(self, "spinner_widget"):
             return
 
         if window == "loading":
@@ -89,7 +93,7 @@ class FreeLancerWindow(BaseView , SingletonMixin):
     def setup_table_widget(self):
         columns = self.get_column_headers()
 
-        self.table_widget = TableWidget( columns, self.controller , self )
+        self.table_widget = TableWidget(columns, self.controller, self)
         self.table_widget.setReadOnlyColumns([0])
         self.table_widget.add_delegate(1, DelegatesType.StringDelegate)
         self.table_widget.add_delegate(2, DelegatesType.NumericalDelegate)

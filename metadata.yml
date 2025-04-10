@@ -1,0 +1,12 @@
+Version: 2.5
+CompanyName: MoneyMaker
+FileDescription: Simple App
+InternalName: MoneyMaker
+LegalCopyright: © Money Maker All rights reserved.
+OriginalFilename: MoneyMaker.exe
+ProductName: MoneyMaker
+Translation:
+  - langID: 0
+    charsetID: 1200
+  - langID: 1033
+    charsetID: 1252

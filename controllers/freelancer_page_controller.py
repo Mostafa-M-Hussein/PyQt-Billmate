@@ -34,7 +34,11 @@ class FreeLancerWindowController:
     def update_or_add_freelancer(self, row):
         print("FreeLance Page im here")
         row_data = [
-            self.view.table_widget.item(row, c).data(Qt.UserRole) if self.view.table_widget.item(row, c) else []
+            (
+                self.view.table_widget.item(row, c).data(Qt.UserRole)
+                if self.view.table_widget.item(row, c)
+                else []
+            )
             for c in range(self.view.table_widget.columnCount())
         ]
         id_data, other_costs, amount, note, date = row_data
@@ -42,14 +46,15 @@ class FreeLancerWindowController:
         if id_data is None or id_data == 0:
             id_data = -1
 
-        if id_data == -1 and   len(str(other_costs)) > 0 :
+        if id_data == -1 and len(str(other_costs)) > 0:
             print("add new company")
             freelancer_id = FreeLancer.add(
-                other_costs=str(other_costs), amount=amount, note=str(note), date=date ,
-            callback = lambda  result , error : self.set_item_id( result , error  , row )
-
+                other_costs=str(other_costs),
+                amount=amount,
+                note=str(note),
+                date=date,
+                callback=lambda result, error: self.set_item_id(result, error, row),
             )
-
 
         elif id_data != -1:
             print("update company")
@@ -64,12 +69,12 @@ class FreeLancerWindowController:
             )
 
     def set_item_id(self, result, error, row):
-        if error :
-            raise  error
+        if error:
+            raise error
 
         item = self.view.table_widget.item(row, 0)
-        item.setData(Qt.UserRole, result.id )
-        item.setData(Qt.DisplayRole, result.id )
+        item.setData(Qt.UserRole, result.id)
+        item.setData(Qt.DisplayRole, result.id)
 
     def update_field_value(self):
         pass

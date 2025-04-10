@@ -1,6 +1,9 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
-    QWidget, QLineEdit, QPushButton, QApplication,
+    QWidget,
+    QLineEdit,
+    QPushButton,
+    QApplication,
 )
 from utils.helpers import load_stylesheet_from_resource, find_widget
 from view.ui.login_window import Ui_Form
@@ -29,7 +32,11 @@ class LoginWindow(QWidget):
 
         # Move window to center
         self.move(x, y)
-        self.passwordLineEdit: QLineEdit = find_widget(self, QLineEdit, 'passwordLineEdit')
-        self.usernameLineEdit: QLineEdit = find_widget(self, QLineEdit, 'usernameLineEdit')
-        self.submitButton: QPushButton = find_widget(self, QPushButton, 'pushButton')
+        self.passwordLineEdit: QLineEdit = find_widget(
+            self, QLineEdit, "passwordLineEdit"
+        )
+        self.usernameLineEdit: QLineEdit = find_widget(
+            self, QLineEdit, "usernameLineEdit"
+        )
+        self.submitButton: QPushButton = find_widget(self, QPushButton, "pushButton")
         self.submitButton.clicked.connect(self.controller.on_submit_clicked)

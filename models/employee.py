@@ -10,7 +10,7 @@ from sqlalchemy import (
     DateTime,
     Date,
     select,
-    Index
+    Index,
 )
 from sqlalchemy.sql import func
 
@@ -37,10 +37,10 @@ class Employee(Base, DynamicSearch):
     updated_at = Column(DateTime, onupdate=func.now())
     created_at = Column(DateTime, default=func.now())
     __table_args__ = (
-        Index('idx_employee_name', 'name'),
-        Index('idx_employee_payment_status', 'payment_status'),
-        Index('idx_employee_payment_date', 'payment_date'),
-        Index('idx_employee_created_at', 'created_at'),
+        Index("idx_employee_name", "name"),
+        Index("idx_employee_payment_status", "payment_status"),
+        Index("idx_employee_payment_date", "payment_date"),
+        Index("idx_employee_created_at", "created_at"),
     )
 
     @staticmethod
@@ -58,14 +58,14 @@ class Employee(Base, DynamicSearch):
     @run_in_thread
     @staticmethod
     def add(
-            session,
-            name: str,
-            salary: decimal.Decimal,
-            loan_from_salary: decimal.Decimal,
-            amount_settled: decimal.Decimal,
-            loan_date: datetime.date,
-            payment_date: datetime.date,
-            payment_status: PaymentStatus,
+        session,
+        name: str,
+        salary: decimal.Decimal,
+        loan_from_salary: decimal.Decimal,
+        amount_settled: decimal.Decimal,
+        loan_date: datetime.date,
+        payment_date: datetime.date,
+        payment_status: PaymentStatus,
     ):
         try:
             employee = Employee(
@@ -167,11 +167,12 @@ class Employee(Base, DynamicSearch):
             logger.error(e, exc_info=True)
 
     @run_in_thread_search
-    def search(self  ,    session  , column, value , *args , **kwargs):
-        print( "type is ==>", type(session) , type(column))
-        result = self.where(column, value, session ,  *args , **kwargs )
+    def search(self, session, column, value, *args, **kwargs):
+        print("type is ==>", type(session), type(column))
+        result = self.where(column, value, session, *args, **kwargs)
         if len(result) == 0:
-            result = self.where(column, value, session ,  *args , **kwargs )
+            result = self.where(column, value, session, *args, **kwargs)
         return result
+
 
 # Employee.search("name" , "")

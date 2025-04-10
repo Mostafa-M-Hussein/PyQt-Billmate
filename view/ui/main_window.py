@@ -16,74 +16,80 @@ class Ui_Form(object):
         Form.setObjectName("Form")
         Form.resize(1062, 786)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/icons/icons/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(
+            QtGui.QPixmap(":/icons/icons/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off
+        )
         Form.setWindowIcon(icon)
         Form.setLayoutDirection(QtCore.Qt.RightToLeft)
-        Form.setStyleSheet("QWidget {\n"
-"\n"
-"            background-color :  rgb(255, 255, 255) ; \n"
-"        \n"
-"            border-radius : 5%;         \n"
-"        padding : 0 ; \n"
-"     margin : 0 ; \n"
-"\n"
-"\n"
-"}")
+        Form.setStyleSheet(
+            "QWidget {\n"
+            "\n"
+            "            background-color :  rgb(255, 255, 255) ; \n"
+            "        \n"
+            "            border-radius : 5%;         \n"
+            "        padding : 0 ; \n"
+            "     margin : 0 ; \n"
+            "\n"
+            "\n"
+            "}"
+        )
         self.verticalLayout = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(Form)
         self.tabWidget.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.tabWidget.setStyleSheet("\n"
-"  QTabWidget::pane {\n"
-"    margin : 5px  ;\n"
-"\n"
-"            border-radius : 3% ;\n"
-"\n"
-"\n"
-"        }\n"
-"\n"
-"\n"
-"\n"
-"QTabWidget::tab-bar {\n"
-"    alignment : right     ;\n"
-"\n"
-"\n"
-"}\n"
-"\n"
-"QTabBar\n"
-"{\n"
-"\n"
-"        font: 11pt \"Ravie\";\n"
-"    font-weight : bold ;\n"
-"\n"
-"}\n"
-"QTabBar::tab {\n"
-"\n"
-"    margin-top : 10px;\n"
-"    background-color : #36304A; \n"
-"    color :  rgb(157, 157, 157)   ;\n"
-"    padding : 5px ;\n"
-"\n"
-"    border : 1px solid transparent    ;\n"
-"    border-radius : 3%;\n"
-"\n"
-"\n"
-"}\n"
-"\n"
-"QTabBar::tab::selected {\n"
-"    background-color  :  rgb(95, 85, 131) ; \n"
-"    color : white    ; \n"
-"\n"
-"\n"
-"\n"
-"}\n"
-"\n"
-"\n"
-"\n"
-"   QTabBar::tab:hover {\n"
-"\n"
-"\n"
-"        }")
+        self.tabWidget.setStyleSheet(
+            "\n"
+            "  QTabWidget::pane {\n"
+            "    margin : 5px  ;\n"
+            "\n"
+            "            border-radius : 3% ;\n"
+            "\n"
+            "\n"
+            "        }\n"
+            "\n"
+            "\n"
+            "\n"
+            "QTabWidget::tab-bar {\n"
+            "    alignment : right     ;\n"
+            "\n"
+            "\n"
+            "}\n"
+            "\n"
+            "QTabBar\n"
+            "{\n"
+            "\n"
+            '        font: 11pt "Ravie";\n'
+            "    font-weight : bold ;\n"
+            "\n"
+            "}\n"
+            "QTabBar::tab {\n"
+            "\n"
+            "    margin-top : 10px;\n"
+            "    background-color : #36304A; \n"
+            "    color :  rgb(157, 157, 157)   ;\n"
+            "    padding : 5px ;\n"
+            "\n"
+            "    border : 1px solid transparent    ;\n"
+            "    border-radius : 3%;\n"
+            "\n"
+            "\n"
+            "}\n"
+            "\n"
+            "QTabBar::tab::selected {\n"
+            "    background-color  :  rgb(95, 85, 131) ; \n"
+            "    color : white    ; \n"
+            "\n"
+            "\n"
+            "\n"
+            "}\n"
+            "\n"
+            "\n"
+            "\n"
+            "   QTabBar::tab:hover {\n"
+            "\n"
+            "\n"
+            "        }"
+        )
         self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabWidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabWidget.setIconSize(QtCore.QSize(20, 20))
@@ -105,7 +111,9 @@ class Ui_Form(object):
         self.tab_1 = QtWidgets.QWidget()
         self.tab_1.setObjectName("tab_1")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/icons/icons/home.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(
+            QtGui.QPixmap(":/icons/icons/home.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off
+        )
         self.tabWidget.addTab(self.tab_1, icon1, "")
         self.verticalLayout.addWidget(self.tabWidget)
 
@@ -116,7 +124,15 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Form", "تكاليف الشركات "))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Form", "تكاليف أخري"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "طلبات المتاجر "))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_1), _translate("Form", "الصفحه الرئيسية"))
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_2), _translate("Form", "تكاليف الشركات ")
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_3), _translate("Form", "تكاليف أخري")
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab), _translate("Form", "طلبات المتاجر ")
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_1), _translate("Form", "الصفحه الرئيسية")
+        )

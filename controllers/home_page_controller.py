@@ -21,7 +21,11 @@ class MainWindowController(BaseController):
 
     def update_employee_data(self, row):
         row_data = [
-            self.view.table_widget.item(row, c).data(Qt.UserRole) if self.view.table_widget.item(row, c) else []
+            (
+                self.view.table_widget.item(row, c).data(Qt.UserRole)
+                if self.view.table_widget.item(row, c)
+                else []
+            )
             for c in range(self.view.table_widget.columnCount())
         ]
         if row_data:
@@ -37,7 +41,6 @@ class MainWindowController(BaseController):
                 loan_date,
                 payment_date,
             ) = row_data
-            print(row_data)
             if id_data is None or id_data is False:
                 id_data = -1
 
@@ -48,12 +51,14 @@ class MainWindowController(BaseController):
                     amount_settled=amount_settled,
                     loan_from_salary=loan_from_salary,
                     loan_date=loan_date,
-                    status=PaymentStatus.get_status(status) if type(status) == str else status,
+                    status=(
+                        PaymentStatus.get_status(status)
+                        if type(status) == str
+                        else status
+                    ),
                     payment_date=payment_date,
-                    row = row
+                    row=row,
                 )
-
-
 
             elif id_data != -1:
                 self.update_existing_employee(
@@ -64,17 +69,26 @@ class MainWindowController(BaseController):
                     loan_from_salary=loan_from_salary,
                     loan_date=loan_date,
                     payment_date=payment_date,
-                    status=PaymentStatus.get_status(status) if type(status) == str else status,
+                    status=(
+                        PaymentStatus.get_status(status)
+                        if type(status) == str
+                        else status
+                    ),
                 )
 
     def add_new_employee(
-            self, name, salary, amount_settled, loan_from_salary, loan_date, status, payment_date  ,row
+        self,
+        name,
+        salary,
+        amount_settled,
+        loan_from_salary,
+        loan_date,
+        status,
+        payment_date,
+        row,
     ):
-
-
         """Add a new employee to the database."""
         emp = Employee.add(
-
             name=name,
             salary=salary,
             amount_settled=amount_settled,
@@ -82,35 +96,28 @@ class MainWindowController(BaseController):
             loan_date=loan_date,
             payment_status=status,
             payment_date=payment_date,
-            callback = lambda  result , error : self.set_item_id( result , error  , row )
-
-
+            callback=lambda result, error: self.set_item_id(result, error, row),
         )
 
-
-        print("Emp data==>" , emp )
+        print("Emp data==>", emp)
 
     def set_item_id(self, result, error, row):
-        if error :
+        if error:
             raise error
         item = self.view.table_widget.item(row, 0)
-        item.setData(Qt.UserRole, result.id )
-        item.setData(Qt.DisplayRole, result.id )
-
-
-
+        item.setData(Qt.UserRole, result.id)
+        item.setData(Qt.DisplayRole, result.id)
 
     def update_existing_employee(
-            self,
-
-            employee_id,
-            name,
-            salary,
-            amount_settled,
-            loan_from_salary,
-            loan_date,
-            payment_date,
-            status,
+        self,
+        employee_id,
+        name,
+        salary,
+        amount_settled,
+        loan_from_salary,
+        loan_date,
+        payment_date,
+        status,
     ):
         Employee.update(
             {
@@ -121,7 +128,7 @@ class MainWindowController(BaseController):
                 "loan_date": loan_date,
                 "payment_date": payment_date,
                 "payment_status": status,
-                "amount_settled": amount_settled
+                "amount_settled": amount_settled,
             }
         )
 
@@ -151,7 +158,11 @@ class MainWindowController(BaseController):
                 value = item.text()
                 item.setData(Qt.DisplayRole, value)
                 qdate = QDate.fromString(value, "yyyy-MM-dd")
-                if value.isnumeric() and not item.data(Qt.UserRole) and item.column() not in string_columns:
+                if (
+                    value.isnumeric()
+                    and not item.data(Qt.UserRole)
+                    and item.column() not in string_columns
+                ):
                     item.setData(Qt.UserRole, Decimal(value))
                 elif qdate.isValid():
                     item.setData(Qt.UserRole, qdate.toPyDate())
@@ -206,7 +217,9 @@ class MainWindowController(BaseController):
 
         if self.check_fields([rem_from_salary, salary]):
             rem_from_salary_result = str(
-                self.calculate_remaining_salary(salary.text(), loan_from_salary.text(), amount_settled.text())
+                self.calculate_remaining_salary(
+                    salary.text(), loan_from_salary.text(), amount_settled.text()
+                )
             )
             rem_from_salary.setText(rem_from_salary_result)
             rem_from_salary.setData(Qt.UserRole, Decimal(rem_from_salary_result))
@@ -217,8 +230,9 @@ class MainWindowController(BaseController):
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
     def show(self) -> None:
-        self.view.showMaximized()
-        # self.view.show()
+
+        # self.view.showMaximized()
+        self.view.show()
 
     def close(self):
         self.view.close()

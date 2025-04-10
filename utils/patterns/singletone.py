@@ -13,6 +13,7 @@ class SingleTone(type, ABC):
     def get_current_instance(cls):
         return cls._instances.get(cls)
 
+
 class SingletonMixin:
     _instance = None
 
@@ -28,16 +29,7 @@ def singleton(cls):
     def _singleton(*args, **kwargs):
         print(_instance)
         if cls not in _instance:
-            _instance[cls] = cls(*args , **kwargs)
+            _instance[cls] = cls(*args, **kwargs)
         return _instance[cls]
-    return  _singleton
 
-
-
-
-
-
-
-
-
-
+    return _singleton

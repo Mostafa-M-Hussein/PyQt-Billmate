@@ -6,7 +6,9 @@ from PyQt5.QtWidgets import (
     QWidget,
     QTableWidgetItem,
     QHBoxLayout,
-    QSplitter, QVBoxLayout, QStackedWidget,
+    QSplitter,
+    QVBoxLayout,
+    QStackedWidget,
 )
 
 from models.company_owner import CompanyOwner
@@ -18,7 +20,8 @@ from view.widgets.table_widget import TableWidget, DelegatesType
 from view.widgets.text_edit_widget import TextEditWidget
 from pyqtspinner import WaitingSpinner
 
-class CompanyOwnerWindow(BaseView , SingletonMixin):
+
+class CompanyOwnerWindow(BaseView, SingletonMixin):
 
     def __init__(self, widget: QWidget, controller):
         self.table_widget = None
@@ -26,10 +29,8 @@ class CompanyOwnerWindow(BaseView , SingletonMixin):
         self.controller = controller
         self.initUi()
 
-
     def initUi(self):
         self.setup_table_widget()
-
 
     def get_column_headers(self, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
@@ -43,14 +44,13 @@ class CompanyOwnerWindow(BaseView , SingletonMixin):
                 "كوبون الخصم",
                 "وسيلة الدفع",
                 "اجمالي الطلب",
-                "المسترجع" ,
+                "المسترجع",
                 "شركة الشحن",
                 "مجموع السلة",
                 "تكلفة",
                 "حالة الطلب",
                 "رقم الطلب",
                 "اسم المتجر",
-
             ]
         else:
             return [
@@ -90,8 +90,11 @@ class CompanyOwnerWindow(BaseView , SingletonMixin):
         # self.spinner_widget.setStyleSheet("background-color : red")
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.spinner_widget)
-        self.spinner = WaitingSpinner(self.spinner_widget, color=QColor(105, 15, 117),
-                                      disable_parent_when_spinning=False)
+        self.spinner = WaitingSpinner(
+            self.spinner_widget,
+            color=QColor(105, 15, 117),
+            disable_parent_when_spinning=False,
+        )
         self.spinner.start()
 
         # self.widget.setLayout(self.vbox)
@@ -118,9 +121,13 @@ class CompanyOwnerWindow(BaseView , SingletonMixin):
             coupon_code = str(row.coupons.code) if row.coupons is not None else ""
             coupon_discount = row.coupons.discount if row.coupons is not None else 0
             shipping_name = str(row.shippings.name) if row.shippings is not None else ""
-            shipping_percentage = row.shippings.percentage if row.shippings is not None else 0
+            shipping_percentage = (
+                row.shippings.percentage if row.shippings is not None else 0
+            )
             payment_name = str(row.payments.name) if row.payments is not None else ""
-            payment_percentage = row.payments.percentage if row.payments is not None else 0
+            payment_percentage = (
+                row.payments.percentage if row.payments is not None else 0
+            )
             item: List[QTableWidgetItem] = [
                 self.create_table_item_widget(str(row.id), row.id),
                 self.create_table_item_widget(str(row.payment_date), row.payment_date),
@@ -129,8 +136,12 @@ class CompanyOwnerWindow(BaseView , SingletonMixin):
                     PaymentStatus.get_str(row.payment_status), row.payment_status
                 ),
                 self.create_table_item_widget(str(row.total_profit), row.total_profit),
-                self.create_table_item_widget(str(row.total_discount), row.total_discount),
-                self.create_table_item_widget(str(row.retrieved_order), row.retrieved_order),
+                self.create_table_item_widget(
+                    str(row.total_discount), row.total_discount
+                ),
+                self.create_table_item_widget(
+                    str(row.retrieved_order), row.retrieved_order
+                ),
                 self.create_table_item_widget(coupon_code, coupon_discount),
                 self.create_table_item_widget(payment_name, payment_percentage),
                 self.create_table_item_widget(str(row.total_demand), row.total_demand),
@@ -156,8 +167,10 @@ class CompanyOwnerWindow(BaseView , SingletonMixin):
 
     def setup_table_widget(self):
         columns = self.get_column_headers()
-        self.table_widget = TableWidget(columns= columns, controller=self.controller , parent= self )
-        self.table_widget.setReadOnlyColumns([0, 4, 5 , 8 , 9  ])
+        self.table_widget = TableWidget(
+            columns=columns, controller=self.controller, parent=self
+        )
+        self.table_widget.setReadOnlyColumns([0, 4, 5, 8, 9])
         self.table_widget.add_delegate(1, DelegatesType.DATE_EDITOR)
         self.table_widget.add_delegate(2, DelegatesType.DATE_EDITOR)
         self.table_widget.add_delegate(3, DelegatesType.COMBOBOXPAYMENT)

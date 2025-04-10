@@ -6,6 +6,7 @@ from pythonjsonlogger.jsonlogger import JsonFormatter
 
 from functools import lru_cache
 
+
 def setup_logger(
     name: str, log_file: str, level: int = logging.DEBUG
 ) -> logging.Logger:

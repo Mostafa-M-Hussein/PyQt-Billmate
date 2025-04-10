@@ -10,6 +10,7 @@ class BaseView(ABC):
     @abstractmethod
     def update_table_data(self):
         raise NotImplementedError(f"No Implemented {self.__name__}")
+
     @abstractmethod
     def update_items(self, result=None, error=None):
         raise NotImplementedError(f"No Implemented {self.__name__}")
@@ -25,4 +26,3 @@ class BaseView(ABC):
     @abstractmethod
     def setup_table_widget(self):
         raise NotImplementedError(f"No Implemented {self.__name__}")
-

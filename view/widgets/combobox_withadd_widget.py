@@ -2,8 +2,21 @@ import decimal
 
 from PyQt5.QtCore import QRect, Qt, QTimer
 from PyQt5.QtGui import QPainter, QColor, QDoubleValidator, QIcon
-from PyQt5.QtWidgets import QLineEdit, QDialog, QDialogButtonBox, QFormLayout, QLabel, QStyledItemDelegate, QStyle, \
-    QComboBox, QMessageBox, QMenu, QAction, QApplication, QListView
+from PyQt5.QtWidgets import (
+    QLineEdit,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QLabel,
+    QStyledItemDelegate,
+    QStyle,
+    QComboBox,
+    QMessageBox,
+    QMenu,
+    QAction,
+    QApplication,
+    QListView,
+)
 
 from models.company_owner import Coupon, Payment, ShippingCompany
 
@@ -79,7 +92,9 @@ class TwoInputDialog(QDialog):
         if self.input2.hasAcceptableInput():
             return self.input2.text()
         else:
-            QMessageBox.warning(self.parent(), "validator", "you should enter valid number")
+            QMessageBox.warning(
+                self.parent(), "validator", "you should enter valid number"
+            )
 
 
 class AddItemDelegate(QStyledItemDelegate):
@@ -115,13 +130,15 @@ class AddItemDelegate(QStyledItemDelegate):
             else:
                 painter.setPen(QColor("#666666"))
 
-            painter.drawLine(x, y + plus_size // 2,
-                             x + plus_size, y + plus_size // 2)
-            painter.drawLine(x + plus_size // 2, y,
-                             x + plus_size // 2, y + plus_size)
+            painter.drawLine(x, y + plus_size // 2, x + plus_size, y + plus_size // 2)
+            painter.drawLine(x + plus_size // 2, y, x + plus_size // 2, y + plus_size)
 
-            text_rect = QRect(x + plus_size + 8, rect.top(),
-                              rect.width() - (x + plus_size + 8), rect.height())
+            text_rect = QRect(
+                x + plus_size + 8,
+                rect.top(),
+                rect.width() - (x + plus_size + 8),
+                rect.height(),
+            )
             painter.drawText(text_rect, Qt.AlignVCenter, "اضافة")
 
             painter.restore()
@@ -130,7 +147,11 @@ class AddItemDelegate(QStyledItemDelegate):
 
 
 class ComboBoxWithAdd(QComboBox):
-    def __init__(self, column_name, parent=None, ):
+    def __init__(
+        self,
+        column_name,
+        parent=None,
+    ):
         super().__init__(parent)
         self.column_name = column_name
         self.delegate = AddItemDelegate(self)
@@ -170,10 +191,13 @@ class ComboBoxWithAdd(QComboBox):
         current_index = self.currentIndex()
         if current_index >= 0:
             text = self.currentText()
-            reply = QMessageBox.question(self, "Confirm Deletion",
-                                         f"Remove item '{text}'?",
-                                         QMessageBox.Yes | QMessageBox.No,
-                                         QMessageBox.No)
+            reply = QMessageBox.question(
+                self,
+                "Confirm Deletion",
+                f"Remove item '{text}'?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
             if reply == QMessageBox.Yes:
                 if self.column_name == "كوبون الخصم":
                     Coupon.remove(text)
@@ -196,7 +220,7 @@ class ComboBoxWithAdd(QComboBox):
         insert_position = self.count()
         self.insertItem(insert_position, display_data, hidden_data)
         self.setItemData(insert_position, hidden_data, Qt.UserRole)
-        #todo remove me if i rais an exception
+        # todo remove me if i rais an exception
 
         view = self.view()
         if isinstance(view, QListView):
@@ -226,8 +250,8 @@ class ComboBoxWithAdd(QComboBox):
 
             view.setMinimumHeight(height)
 
-        if self.view().isVisible() :
-            QTimer.singleShot(0 , self.showPopup )
+        if self.view().isVisible():
+            QTimer.singleShot(0, self.showPopup)
         # self.setCurrentIndex(insert_position)
 
     def _handle_activation(self, index: int):

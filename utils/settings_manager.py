@@ -12,7 +12,6 @@ class SettingManager:
             )
         return cls.__instance
 
-
     def remove_value(self, key):
         self.settings.remove(key)
 

@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Column, DateTime, select, Enum as SqlEnum , Index
+from sqlalchemy import String, Integer, Column, DateTime, select, Enum as SqlEnum, Index
 from sqlalchemy.sql import func, and_
 
 from models import Base, run_in_thread
@@ -19,10 +19,11 @@ class User(Base, DynamicSearch):
     created_at = Column(DateTime, default=func.now())
 
     __table_args__ = (
-        Index('idx_user_name', 'name'),
-        Index('idx_user_password', 'password'),
-        Index('idx_user_role', 'role'),
+        Index("idx_user_name", "name"),
+        Index("idx_user_password", "password"),
+        Index("idx_user_role", "role"),
     )
+
     @run_in_thread
     @staticmethod
     def get(session, name: str):
@@ -37,20 +38,11 @@ class User(Base, DynamicSearch):
 
     @run_in_thread
     @staticmethod
-    def add(session,
-            name,
-            password,
-            role
-
-            ):
+    def add(session, name, password, role):
 
         try:
             print("add new company")
-            company = User(
-                name=name,
-                password=password,
-                role=role
-            )
+            company = User(name=name, password=password, role=role)
             session.add(company)
             session.commit()
             session.refresh(company)
@@ -117,6 +109,11 @@ class User(Base, DynamicSearch):
             logger.error(e, exc_info=True)
 
     @run_in_thread
-    @classmethod
-    def verify(cls, session, name, password):
-        return session.query(cls).where(and_(cls.name == name, cls.password == password)).first()
+    @staticmethod
+    def verify(session, name, password):
+        print(type(session))
+        return (
+            session.query(User)
+            .where(and_(User.name == name, User.password == password))
+            .first()
+        )
